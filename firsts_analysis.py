@@ -1,2 +1,3 @@
 #Run example
-a = example
+a = 'example'
+b = 'example2'
