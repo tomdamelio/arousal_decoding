@@ -1,3 +1,2 @@
-#Run example
-a = 'example'
-b = 'example2'
+import cPickle
+x = cPickle.load(open('s01.dat', 'rb'))
