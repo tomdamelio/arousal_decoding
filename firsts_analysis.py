@@ -16,8 +16,8 @@ print('Number of channels in s1_temp:')
 print(len(s1_temp.ch_names), end=' → pick only EDA → ')
 s1_temp.pick_channels(['GSR1'])
 print(len(s1_temp.ch_names))
-# Plot  EDA. Doesn't work well.
-s1_temp.plot()
+# Plot  EDA. Plot only first part of the signal
+s1_temp.plot(scalings='auto') 
 
 # Plot the EDA power spectral density 
 s1_temp.plot_psd()
