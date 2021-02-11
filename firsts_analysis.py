@@ -1,6 +1,8 @@
 import mne
 from EEG_channels_twente import channels 
 import matplotlib.pyplot as plt
+from matplotlib import pyplot
+import seaborn as sns
 
 plt.ion() #Should make plot interactive
 
@@ -16,10 +18,18 @@ s1_temp.pick_channels(['GSR1'])
 print(len(s1_temp.ch_names))
 # Plot  EDA. Doesn't work well.
 s1_temp.plot()
+
 # Plot the EDA power spectral density 
 s1_temp.plot_psd()
 # Create dataframe of EDA subject 1
 df_s1_EDA = s1_temp.to_data_frame()
+# Second test. Plot EDA
+df_s1_EDA.plot()
+pyplot.show()
+# Third test. Plot EDA
+sns.set_theme(style="darkgrid")
+sns.lineplot(x="time", y="GSR1",
+             data=df_s1_EDA)
 
 # Select only EEG data
 s1_temp2 = s1.copy()
