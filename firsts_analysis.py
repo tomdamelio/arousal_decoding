@@ -4,8 +4,6 @@ import matplotlib.pyplot as plt
 from matplotlib import pyplot
 import seaborn as sns
 
-plt.ion() #Should make plot interactive
-
 #Read bdf
 s1 = mne.io.read_raw_bdf("data/s01.bdf", preload=True)
 print(s1.info)
