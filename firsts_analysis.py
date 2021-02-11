@@ -1,8 +1,11 @@
 import mne
 from EEG_channels_twente import channels 
+import matplotlib.pyplot as plt
+
+plt.ion() #Should make plot interactive
 
 #Read bdf
-s1 = mne.io.read_raw_bdf("data/s01.bdf")
+s1 = mne.io.read_raw_bdf("data/s01.bdf", preload=True)
 print(s1.info)
 
 # Select only EDA data
