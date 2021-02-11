@@ -27,7 +27,6 @@ df_s1_EDA = s1_temp.to_data_frame()
 df_s1_EDA.plot()
 pyplot.show()
 # Third test. Plot EDA
-sns.set_theme(style="darkgrid")
 sns.lineplot(x="time", y="GSR1",
              data=df_s1_EDA)
 
