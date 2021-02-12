@@ -8,7 +8,7 @@ import seaborn as sns
 import numpy as np
 
 # Read bdf
-number_subject = '26'
+number_subject = '14'
 path = os.path.join('data', 's'+ number_subject + '.bdf')
 s1 = mne.io.read_raw_bdf(path, preload=True)
 # Print info of the subject 1 signal
@@ -35,17 +35,20 @@ df_s1_EDA.rename(columns={'GSR1': 'EDA'}, inplace=True)
 
 # Transform EDA (participant 23-32 in Geneva) --> GSR geneva = 10**9 / GSR twente
 if int(number_subject) < 23:
-    #df_s1_EDA["EDA"] = 10**9/df_s1_EDA["EDA"]
+    df_s1_EDA["EDA"] = (df_s1_EDA["EDA"])/1000
     print('funca')
 else:
     df_s1_EDA["EDA"] = (10**9/df_s1_EDA["EDA"])*1000
     print('funca')
     
+# Create column "time_min"
+df_s1_EDA['time_min'] = (df_s1_EDA.time/1000)/60
+    
 # Plot EDA: whole data v.2
-df_s1_EDA = df_s1_EDA.iloc[:1800000,:]
-df_s1_EDA.plot.line(ylim= x='time', y='EDA')
-
-
+ax = df_s1_EDA.plot.line(title= 'subject'+number_subject, x='time_min', y='EDA')
+ax.set_xlabel("Time(min)")
+ax.set_ylabel("Skin conductance(µS)")
+#ylim=(0,20)
 
 
 # Plot EDA: whole data
