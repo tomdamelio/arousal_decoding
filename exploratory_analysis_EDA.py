@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Read bdf
-number_subject = '1' # Insert subject number
+number_subject = '05' # Insert subject number
 path = os.path.join('data', 's'+ number_subject + '.bdf')
 s1 = mne.io.read_raw_bdf(path, preload=True)
 # Print info of subject's signal
@@ -46,3 +46,5 @@ ax.set_xlabel("Time(min)")
 ax.set_ylabel("Skin conductance(µS)")
 #ylim=(0,20)
 
+#PSD EDA
+s1_temp.plot_psd(n_fft=512, fmin=0, fmax=10)
