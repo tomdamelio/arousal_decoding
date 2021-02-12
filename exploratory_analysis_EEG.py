@@ -1,6 +1,6 @@
 import os
 import mne
-from EEG_channels_twente import channels 
+from EEG_channel_name import channels_geneva, ch 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib import pyplot
