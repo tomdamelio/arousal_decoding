@@ -4,7 +4,6 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib import pyplot
 import seaborn as sns
-mpl.use('TkAgg')
 
 # Read bdf
 s1 = mne.io.read_raw_bdf("data/s01.bdf", preload=True)
@@ -18,20 +17,16 @@ print(len(s1_temp.ch_names), end=' → pick only EDA → ')
 s1_temp.pick_channels(['GSR1'])
 print(len(s1_temp.ch_names))
 # Plot  EDA. Plot only first part of the signal
-#%matplotlib qt
+%matplotlib qt
 s1_temp.plot(scalings='auto') 
 
 # Plot the EDA power spectral density 
-
 s1_temp.plot_psd()
 # Create dataframe of EDA subject 1
 df_s1_EDA = s1_temp.to_data_frame()
-# Second test. Plot EDA
-df_s1_EDA.plot()
-pyplot.show()
-# Third test. Plot EDA
-#sns.lineplot(x="time", y="GSR1",
-#             data=df_s1_EDA)
+# Plot EDA: whole data
+ns.lineplot(x="time", y="GSR1",
+             data=df_s1_EDA)
 
 # Select only EEG data
 s1_temp2 = s1.copy()
@@ -40,9 +35,12 @@ print(len(s1_temp2.ch_names), end=' → pick only EEG → ')
 s1_temp2.pick_channels(channels)
 print(len(s1_temp2.ch_names))
 # Plot EEG 
-s1_temp2.plot()
+#%matplotlib qt
+s1_temp2.plot(scalings='auto')
 # Plot the EEG power spectral density 
 s1_temp2.plot_psd()
 # Create dataframe EEG subject 1
-df_s1_EEG = s1_temp2.to_data_frame()
+#df_s1_EEG = s1_temp2.to_data_frame()
 
+
+# %%
