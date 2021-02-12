@@ -8,7 +8,7 @@ import seaborn as sns
 import numpy as np
 
 # Read bdf
-number_subject = '26'
+number_subject = '25'
 path = os.path.join('data', 's'+ number_subject + '.bdf')
 s1 = mne.io.read_raw_bdf(path, preload=True)
 # Print info of the subject 1 signal
@@ -42,7 +42,6 @@ else:
     print('funca')
     
 # Plot EDA: whole data v.2
-df_s1_EDA = df_s1_EDA.iloc[:1800000,:]
 df_s1_EDA.plot.line(ylim= x='time', y='EDA')
 
 
@@ -66,6 +65,3 @@ df_s1_EDA.plot.line(ylim= x='time', y='EDA')
 #s1_temp2.plot_psd()
 # Create dataframe EEG subject 1
 #df_s1_EEG = s1_temp2.to_data_frame()
-
-
-# %%
