@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
 from scipy.signal import freqz
-from filters import butter_bandpass, butter_bandpass_filter
+from filters import bandPassFilter
 
 # Read bdf
-number_subject = '06' # Insert subject number
+number_subject = '07' # Insert subject number
 path = os.path.join('data', 's'+ number_subject + '.bdf')
 s1 = mne.io.read_raw_bdf(path, preload=True)
 # Print info of subject's signal
@@ -45,9 +45,9 @@ df_s1_EDA['time_min'] = (df_s1_EDA.time/1000)/60
 # Create column "time_sed"
 df_s1_EDA['time_sec'] = df_s1_EDA.time/1000
 
-# Detrend signal
+# plot detrended signal v. 1
 df_s1_EDA['EDA_detreneded'] = signal.detrend(df_s1_EDA["EDA"])
-# Plot detrended signal
+
 t = df_s1_EDA['time_min']
 x = df_s1_EDA['EDA']
 x_detrended = df_s1_EDA['EDA_detreneded']
@@ -60,22 +60,13 @@ plt.show()
 
 # plot detrended signal v. 2
 # Sample rate and desired cutoff frequencies (in Hz).
-fs = 512
-lowcut = 0.05
-highcut = 5.0
+sensor_data = np.array(x)
+time = t
+plt.plot(time, sensor_data)
+plt.show()
 
-# Filter a noisy signal.
-plt.figure()
-plt.clf()
-plt.plot(t, x, label='EDA')
-
-y = butter_bandpass_filter(x, lowcut, highcut, fs, order=6)
-plt.plot(t, y, label='Filtered EDA')
-plt.xlabel('time (minutes)')
-plt.grid(True)
-plt.axis('tight')
-plt.legend(loc='upper left')
-
+filtered_signal = bandPassFilter(sensor_data)
+plt.plot(time, filtered_signal)
 plt.show()
 
 # Plot EDA: whole data v.2
