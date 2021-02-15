@@ -62,7 +62,7 @@ plt.show()
 # Sample rate and desired cutoff frequencies (in Hz).
 fs = 512
 lowcut = 0.05
-highcut = 5
+highcut = 5.0
 
 # Filter a noisy signal.
 plt.figure()

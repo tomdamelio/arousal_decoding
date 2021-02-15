@@ -1,13 +1,22 @@
-from scipy.signal import butter, lfilter, filtfilt 
-def butter_bandpass(lowcut, highcut, fs, order=5):
-    nyq = 0.5 * fs
-    low = lowcut / nyq
-    high = highcut / nyq
-    b, a = butter(order, [low, high], btype='band')
-    return b, a
+from scipy.signal import filt.filt
+from scipy import stats
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy
 
-
-def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
-    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
-    y = filtfilt (b, a, data)
-    return y
+def bandPassFilter(signal):
+    fs = 512
+    lowcut = 0.05
+    highcut = 5.0
+    
+    nyq = 0.6 * fs
+    low = lowcut/nyq
+    high = highcut/nyq
+    
+    order = 2
+    
+    b, a = scipy.signal.butter(order, [low, high], 'bandpass', analog=False)
+    y = scipy.signal.filtfily(b, a, signal, axis=0)
+    
+    return(y)
