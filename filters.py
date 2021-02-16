@@ -1,4 +1,4 @@
-from scipy.signal import filt.filt
+from scipy.signal import filtfilt
 from scipy import stats
 import pandas as pd
 import numpy as np
@@ -7,8 +7,8 @@ import scipy
 
 def bandPassFilter(signal):
     fs = 512
-    lowcut = 0.05
-    highcut = 5.0
+    lowcut = 0.001
+    highcut = 100.0
     
     nyq = 0.6 * fs
     low = lowcut/nyq
@@ -17,6 +17,6 @@ def bandPassFilter(signal):
     order = 2
     
     b, a = scipy.signal.butter(order, [low, high], 'bandpass', analog=False)
-    y = scipy.signal.filtfily(b, a, signal, axis=0)
+    y = scipy.signal.filtfilt(b, a, signal, axis=0)
     
     return(y)
