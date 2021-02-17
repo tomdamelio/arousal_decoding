@@ -10,7 +10,8 @@ from pandas.plotting import andrews_curves
 from subject_number import subject_number
 
 
-os.mkdir('subject_plots')
+#os.mkdir('subject_plots')
+subject_number_sample = ['01','02']
 for i in  subject_number:
     # Read bdf
     path = os.path.join('data', 's'+ i + '.bdf')
@@ -34,6 +35,10 @@ for i in  subject_number:
 
     #Create dataframe of EDA subject 1
     df_s1_EDA = s1_temp.to_data_frame()
+    
+    #Create dataframe of EDA subject 1
+    df_s1_EDA.replace(0, np.nan)
+
 
     #Rename column
     df_s1_EDA.rename(columns={'GSR1': 'EDA'}, inplace=True)
@@ -49,10 +54,14 @@ for i in  subject_number:
     # Create column "time_sed"
     df_s1_EDA['time_sec'] = df_s1_EDA.time/1000
     
-    ax = df_s1_EDA.plot.line(ylim=(0,20), x='time_min', y='EDA')
+    df_s1_EDA_lastsecs = df_s1_EDA.tail(10000)
+    
+    ax = df_s1_EDA_lastsecs.plot.line(ylim=(0,20), x='time_min', y='EDA')
     ax.set_xlabel("Time(min)")
     ax.set_ylabel("Skin conductance(µS)")
     ax.set_title('Subject {}'.format(i))
+    
+    plt.savefig('/data/clean_EDA/Subject_{}_raw_EDA_last_seconds.png'.format(i))
 
 # Plot all signals
 #for df in testdf.groupby(by='subject'):
