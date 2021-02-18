@@ -1,5 +1,6 @@
 # Plot comparison between signal and signal detrended of a subject
 
+#%%
 import os
 import mne
 import matplotlib as mpl
@@ -27,6 +28,12 @@ df_s1_EDA = s1_temp.to_data_frame()
 # Filter signal
 s1_filtered = s1_temp.filter(0.05, 5., fir_design='firwin')
 
+### CONTINUE PIPELINE IN MNE ###
+
+
+
+
+### ------------------------ ###
 # Create dataframe of EDA subject 1 (filtered)
 df_s1_filtered_EDA = s1_filtered.to_data_frame()
                        
@@ -70,3 +77,5 @@ plt.xlabel("Time(min)")
 plt.ylabel("Skin conductance(µS)")
 plt.legend(loc='best')
 plt.show()
+
+# %%
