@@ -28,9 +28,7 @@ def extract_signal(signal = 'EDA', directory = 'data', number_subject='01',
             print(len(subject_n_temp.ch_names))
             print(subject_n.info)
         print (number_subject)
-        return subject_n_temp
-    
-    if signal == 'EEG':
+    elif signal == 'EEG':
         print('Number of channels in s1_temp:')
         print(len(subject_n_temp.ch_names), end=' → pick only EEG → ')
         if int(number_subject) < 23:
@@ -41,6 +39,6 @@ def extract_signal(signal = 'EDA', directory = 'data', number_subject='01',
             print(len(subject_n_temp.ch_names))
             print(subject_n_temp.info)
         print (number_subject)
-        return subject_n_temp
+    return subject_n_temp
     
     
