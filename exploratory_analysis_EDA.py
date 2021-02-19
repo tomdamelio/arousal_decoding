@@ -7,32 +7,26 @@ import numpy as np
 from subject_number import subject_number
 from my_functions import extract_signal
 
-#trial = ['01','02','03','04']
-#for i in  trial:
-# Read bdf
-extract_signal()
+# subject number
+i = '01'
 
-#path = os.path.join('data', 's'+ i + '.bdf')
-#s1 = mne.io.read_raw_bdf(path, preload=True)
-# Print info of subject's signal
-#print(s1.info)
-
-# Select EDA data
-#s1_temp = s1.copy()
-#print('Number of channels in s1_temp:')
-#print(len(s1_temp.ch_names), end=' → pick only EDA → ')
-#s1_temp.pick_channels(['GSR1'])
-#print(len(s1_temp.ch_names))
-
+# Extract EDA signal
+subject_n_temp = extract_signal(signal = 'EDA', number_subject = i)
 
 # Filter signal
 s1_filtered = subject_n_temp.filter(0.05, 5., fir_design='firwin')
 
+### CONTINUE PIPELINE IN MNE ###
+
+
+
+
+### ------------------------ ###
+
+
 # Create dataframe of EDA subject 1 (filtered)
 df_s1_EDA = s1_filtered.to_data_frame()
 
-
-### CONTINUE PIPELINE WITH DATAFRAMES (PANDAS) ###
 #Rename column
 df_s1_EDA.rename(columns={'GSR1': 'EDA'}, inplace=True)
 
@@ -49,24 +43,12 @@ df_s1_EDA['time_sec'] = df_s1_EDA.time/1000
 
 # plot signal
 t = df_s1_EDA['time_min']
-#x = df_s1_EDA['EDA']
 x_detrended = df_s1_EDA['EDA']
 
-#plt.figure(figsize=(5, 4))
 plt.plot(t, x_detrended, label="S {}".format(i), linewidth=1)
 
 plt.xlabel("Time(min)")
 plt.ylabel("Skin conductance(µS)")
 plt.legend(loc='best')
 plt.show()
-
-
-### ------------------------------------------ ###
-
-#%%
-### CONTINUE PIPELINE IN MNE ###
-
-
-
-
-### ------------------------ ###
+# %%
