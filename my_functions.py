@@ -10,8 +10,10 @@ def extract_signal(signal = 'EDA', directory = 'data', number_subject='01',
     :extension:      file extension. Default --> .bdf
     :info:           True or False. Print signal information.
     
-    :return:         extracted signal (EEG or EDA)
+    :return:         extracted signal (EEG or EDA) --> subject_n_temp
     """ 
+    import os
+    import mne
     path = os.path.join(directory, 's'+ number_subject + extension)
     subject_n = mne.io.read_raw_bdf(path, preload=True)
     
