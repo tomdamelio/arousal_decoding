@@ -1,3 +1,4 @@
+#%%
 import os
 import mne
 from EEG_channel_name import channels_geneva, channels_twente 
@@ -30,3 +31,5 @@ s1_temp2.plot()
 s1_temp2.plot_psd()
 # Create dataframe EEG subject 1
 df_s1_EEG = s1_temp2.to_data_frame()
+
+# %%

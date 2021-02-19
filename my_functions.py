@@ -14,6 +14,7 @@ def extract_signal(signal = 'EDA', directory = 'data', number_subject='01',
     """ 
     import os
     import mne
+    from EEG_channel_name import channels_geneva, channels_twente 
     path = os.path.join(directory, 's'+ number_subject + extension)
     subject_n = mne.io.read_raw_bdf(path, preload=True)
     
