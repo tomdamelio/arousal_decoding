@@ -18,7 +18,14 @@ s1_filtered = subject_n_temp.filter(0.05, 5., fir_design='firwin')
 
 ### CONTINUE PIPELINE IN MNE ###
 
+# 1) Transform EDA (depending on recording procedure)
 
+# 2) CLean signals
+#    -  Negative values            ==> 01 02 03 08 14 15
+#    -  Out-of-range values        ==> 26
+#    -  sudden jumps in the signal ==> 31
+
+# 3) Change variable names (and x and y labels in plots)
 
 
 ### ------------------------ ###
