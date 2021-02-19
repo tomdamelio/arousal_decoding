@@ -1,4 +1,3 @@
-#%%
 import os
 import mne
 import matplotlib as mpl
@@ -17,6 +16,5 @@ for i in subject_number:
     # PSD
     fig = s1_filtered.plot_psd(n_fft=512, fmin=0.01, fmax=5)#, xscale = 'log')
 
-    # Guardar en 
+    # Save plots
     fig.savefig('subject_plots/PSD/plot_S{}.png'.format(i))
-# %%
