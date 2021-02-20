@@ -10,24 +10,24 @@ from my_functions import extract_signal
 number_subject = '01'
 
 #Extract signal
-raw = extract_signal(directory = 'data', number_subject='number_subject',
+raw = extract_signal(directory = 'data', number_subject=number_subject,
                      extension = '.bdf')
 
 # Pick EDA signal
 raw.pick_channels(['GSR1'])
 
+# Rename channel EDA and set GSR as channel type
+mne.rename_channels(info= raw.info , mapping={'GSR1':'EDA'})
+raw.set_channel_types({'EDA': 'misc'})
+
 # Creat numpy array
 EDA_array = raw._data
 
-# Remove one group of brackets from array
-EDA_array = np.array(EDA_array).flatten()
-
-# 1)  Transform EDA (depending on recording procedure) --> IN PROGRESS
+# 1)  Transform EDA (depending on recording procedure) --> IN PROGRESS (results doesn't match what I have obtained with DFs)
 if int(number_subject) < 23:
     EDA_array_transformed = EDA_array / 10**9
 else:
     EDA_array_transformed = (10**9/EDA_array)*1000  
-    
     
 # 2) Clean signals
 #    -  Negative values            ==> 01 02 03 08 14 15
@@ -36,15 +36,12 @@ else:
 
 # 3) Change variable names (and x and y labels in plots)
 
-#%%
-# Rename channel EDA and set GSR as channel type
-mne.rename_channels(info= raw_filtered.info , mapping={'GSR1':'EDA'})
-raw.set_channel_types({'EDA': 'misc'})
+
+# Return to Raw data
+raw = mne.io.RawArray(data=EDA_array_transformed, info= raw.info)
 
 # Filter signal
 raw_filtered = raw.filter(0.05, 5., fir_design='firwin')
-
-
 
 
 #%%
