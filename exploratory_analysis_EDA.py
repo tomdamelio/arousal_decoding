@@ -1,4 +1,4 @@
-#%%
+
 import os
 import mne
 import matplotlib as mpl
@@ -41,10 +41,9 @@ else:
 raw = mne.io.RawArray(data=EDA_array_transformed, info= raw.info)
 
 # Filter signal
-raw_filtered = raw.filter(0.05, 5., fir_design='firwin')
+#raw_filtered = raw.filter(0.05, 5., fir_design='firwin')
 
 
-#%%
 #####  Continue working with DataFrames ######
 
 # Create dataframe of EDA subject 1 (filtered)
