@@ -1,4 +1,4 @@
-def extract_signal(signal = 'EDA', directory = 'data', number_subject='01',
+def extract_signal(directory = 'data', number_subject='01',
                    extension = '.bdf', info=False):
     """
     extract_signal reads the biosignals of a given file format and extracts the signal
@@ -17,24 +17,6 @@ def extract_signal(signal = 'EDA', directory = 'data', number_subject='01',
     from EEG_channel_name import channels_geneva, channels_twente 
     path = os.path.join(directory, 's'+ number_subject + extension)
     raw = mne.io.read_raw_bdf(path, preload=True)
-    
-    if signal == 'EDA':
-        print('Number of channels in s1_temp:')
-        print(len(raw.ch_names), end=' → pick only EDA → ')
-        raw.pick_channels(['GSR1'])
-        if info == True:
-            print(len(raw.ch_names))
-            print(raw.info)
-    elif signal == 'EEG':
-        print('Number of channels in s1_temp:')
-        print(len(raw.ch_names), end=' → pick only EEG → ')
-        if int(number_subject) < 23:
-            raw.pick_channels(channels_twente)
-        else:
-            raw.pick_channels(channels_geneva)
-        if info == True:
-            print(len(raw.ch_names))
-            print(raw.info)
     return raw
     
     
