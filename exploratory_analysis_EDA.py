@@ -7,16 +7,12 @@ import numpy as np
 from subject_number import subject_number
 from my_functions import extract_signal
 
-# subject number
-i = '01'
-
-# Extract EDA signal
-# %%
-mne.io.RawArray
-# %%
+#Extract signal
 raw = extract_signal(signal = 'EDA', number_subject = i)
 
 ### CONTINUE PIPELINE IN MNE ###
+# Filter signal
+raw_filtered = raw.filter(0.05, 5., fir_design='firwin')
 
 # 1) Transform EDA (depending on recording procedure)
 
@@ -27,13 +23,12 @@ raw = extract_signal(signal = 'EDA', number_subject = i)
 
 # 3) Change variable names (and x and y labels in plots)
 
-# Filter signal
-s1_filtered = subject_n_temp.filter(0.05, 5., fir_design='firwin')
+
 ### ------------------------ ###
 
-
+#%%
 # Create dataframe of EDA subject 1 (filtered)
-df_s1_EDA = s1_filtered.to_data_frame()
+df_s1_EDA = raw_filtered.to_data_frame()
 
 #Rename column
 df_s1_EDA.rename(columns={'GSR1': 'EDA'}, inplace=True)
