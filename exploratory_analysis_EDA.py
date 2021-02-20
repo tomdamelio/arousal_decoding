@@ -11,23 +11,24 @@ from my_functions import extract_signal
 i = '01'
 
 # Extract EDA signal
-subject_n_temp = extract_signal(signal = 'EDA', number_subject = i)
-
-# Filter signal
-s1_filtered = subject_n_temp.filter(0.05, 5., fir_design='firwin')
+# %%
+mne.io.RawArray
+# %%
+raw = extract_signal(signal = 'EDA', number_subject = i)
 
 ### CONTINUE PIPELINE IN MNE ###
 
 # 1) Transform EDA (depending on recording procedure)
 
-# 2) CLean signals
+# 2) Clean signals
 #    -  Negative values            ==> 01 02 03 08 14 15
 #    -  Out-of-range values        ==> 26
-#    -  sudden jumps in the signal ==> 31
+#    -  Sudden jumps in the signal ==> 31
 
 # 3) Change variable names (and x and y labels in plots)
 
-
+# Filter signal
+s1_filtered = subject_n_temp.filter(0.05, 5., fir_design='firwin')
 ### ------------------------ ###
 
 
@@ -58,4 +59,7 @@ plt.xlabel("Time(min)")
 plt.ylabel("Skin conductance(µS)")
 plt.legend(loc='best')
 plt.show()
+
+
+
 # %%

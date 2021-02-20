@@ -16,30 +16,25 @@ def extract_signal(signal = 'EDA', directory = 'data', number_subject='01',
     import mne
     from EEG_channel_name import channels_geneva, channels_twente 
     path = os.path.join(directory, 's'+ number_subject + extension)
-    subject_n = mne.io.read_raw_bdf(path, preload=True)
-    
-    # Select EDA data
-    subject_n_temp = subject_n.copy()
+    raw = mne.io.read_raw_bdf(path, preload=True)
     
     if signal == 'EDA':
         print('Number of channels in s1_temp:')
-        print(len(subject_n_temp.ch_names), end=' → pick only EDA → ')
-        subject_n_temp.pick_channels(['GSR1'])
+        print(len(raw.ch_names), end=' → pick only EDA → ')
+        raw.pick_channels(['GSR1'])
         if info == True:
-            print(len(subject_n_temp.ch_names))
-            print(subject_n.info)
-        print (number_subject)
+            print(len(raw.ch_names))
+            print(raw.info)
     elif signal == 'EEG':
         print('Number of channels in s1_temp:')
-        print(len(subject_n_temp.ch_names), end=' → pick only EEG → ')
+        print(len(raw.ch_names), end=' → pick only EEG → ')
         if int(number_subject) < 23:
-            subject_n_temp.pick_channels(channels_twente)
+            raw.pick_channels(channels_twente)
         else:
-            subject_n_temp.pick_channels(channels_geneva)
+            raw.pick_channels(channels_geneva)
         if info == True:
-            print(len(subject_n_temp.ch_names))
-            print(subject_n_temp.info)
-        print (number_subject)
-    return subject_n_temp
+            print(len(raw.ch_names))
+            print(raw.info)
+    return raw
     
     
