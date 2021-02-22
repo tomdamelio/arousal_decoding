@@ -1,5 +1,5 @@
 def extract_signal(directory = 'data', number_subject='01',
-                   extension = '.bdf', info=False):
+                   extension = '.bdf'):
     """
     extract_signal reads the biosignals of a given file format and extracts the signal
     we want to use for further analysis.
