@@ -1,4 +1,4 @@
-
+#%%
 import os
 import mne
 import matplotlib as mpl
@@ -14,14 +14,22 @@ raw = extract_signal(directory = 'data', number_subject=number_subject,
                      extension = '.bdf')
 
 # Pick EDA signal
-raw.pick_channels(['GSR1'])
+#raw.pick_channels(['GSR1'])
 
 # Rename channel EDA and set GSR as channel type
 mne.rename_channels(info= raw.info , mapping={'GSR1':'EDA'})
 raw.set_channel_types({'EDA': 'misc'})
 
 # Creat numpy array
-EDA_array = raw._data
+#INTENTO 1
+#EDA_index = mne.pick_types(raw.info, misc=True)
+#EDA_array = raw.get_data('EDA_index',return_times=True) #[mne.pick_types(raw.info, misc=True)]
+#INTENTO 2
+EDA_index = mne.pick_types(raw.info, misc=True)
+EDA_array = raw.get_data()[EDA_index]#(return_times=True)#[EDA_index]
+
+
+#%%
 
 # 1)  Transform EDA (depending on recording procedure) --> IN PROGRESS (results doesn't match what I have obtained with DFs)
 if int(number_subject) < 23:
@@ -38,12 +46,14 @@ else:
 
 
 # Return to Raw data
-raw = mne.io.RawArray(data=EDA_array_transformed, info= raw.info)
+#raw = mne.io.RawArray(data=EDA_array_transformed, info= raw.info)
 
 # Filter signal
 #raw_filtered = raw.filter(0.05, 5., fir_design='firwin')
 
 
+
+#%%
 #####  Continue working with DataFrames ######
 
 # Create dataframe of EDA subject 1 (filtered)
