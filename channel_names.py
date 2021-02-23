@@ -94,4 +94,4 @@ channels_geneva =  ['Fp1',
                     'RESP',
                     'PLET',
                     'TEMP',
-                    'STIM]
+                    'STIM']

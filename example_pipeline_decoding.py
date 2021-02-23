@@ -18,7 +18,7 @@ from sklearn.linear_model import Ridge
 from sklearn.model_selection import KFold, cross_val_predict
 
 from my_functions import extract_signal
-from channel_name import channels_geneva, channels_twente 
+from channel_names import channels_geneva, channels_twente 
 
 # Define parameters
 number_subject = '01'
