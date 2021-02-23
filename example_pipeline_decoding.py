@@ -77,18 +77,27 @@ picks_eda = mne.pick_channels(ch_names = eda.ch_names ,include=['EDA'])
 # https://mne.tools/0.15/generated/mne.io.Raw.html#mne.io.Raw.filter
 eda.filter(0.05, 5., fir_design='firwin', picks=picks_eda)
 
+
 # Select and filter EEG data (not EOG)
-picks_eeg = raw.pick_types(eeg=True, eog=False)
+picks_eeg = mne.pick_types(raw.info, eeg=True, eog=False)
+
 raw.filter(0.1, 120., fir_design='firwin', picks=picks_eeg)
 
 #%%
 # Build epochs as sliding windows over the continuous raw file
+# duration and overapls is in secods (because "raw.times" is in secods)
 events = mne.make_fixed_length_events(raw, id=1, duration=10.0, overlap= 2.0)
+# 3 values:
+#  1 - sample number
+#  2 - what the event code was on the immediately preceding sample.
+#      In practice, that value is almost always 0, but it can be used to detect the
+#      endpoint of an event whose duration is longer than one sample.
+#  3 - integer event code --> always 1 because there are not different stim values
 
+#%%
 # Epoch length is 1.5 second
-eeg_epochs = Epochs(raw, events, tmin=0., tmax=1.500, baseline=None,
-                    detrend=1, decim=8)
-eda_epochs = Epochs(eda, events, tmin=0., tmax=1.500, baseline=None)
+eeg_epochs = Epochs(raw=raw, events=events, tmin=0., tmax=0., baseline=None)
+eda_epochs = Epochs(raw=eda, events=events, tmin=0., tmax=0., baseline=None)
 
 
 #%%
