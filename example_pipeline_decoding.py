@@ -29,24 +29,57 @@ raw = extract_signal(directory = 'data', number_subject=number_subject,
 
 # Rename channel EDA and set GSR as channel type
 mne.rename_channels(info= raw.info , mapping={'GSR1':'EDA'})
-raw.set_channel_types({'EDA': 'misc'})
-#%%
+# raw.ch_names # Reutrn list of channels
+
+raw.set_channel_types({'EXG1': 'eog',
+                       'EXG2': 'eog',
+                       'EXG3': 'eog',
+                       'EXG4': 'eog',
+                       'EXG5': 'emg',
+                       'EXG6': 'emg',
+                       'EXG7': 'emg',
+                       'EXG8': 'emg',
+                       'EDA' : 'misc',
+                       'GSR2': 'misc',
+                       'Erg1': 'misc',
+                       'Erg2': 'misc',
+                       'Resp': 'misc',
+                       'Plet': 'misc',
+                       'Temp': 'misc'})
 
 # Pick EDA
 eda = raw.copy().pick_channels(['EDA'])
 # load_data would not be necessary. 
 # The function load_data() returns a list of paths that the requested data files located.
 
+
+# Clean data --> apply function
+# https://mne.tools/dev/generated/mne.io.Raw.html#mne.io.Raw.apply_function
+
+# 1)  Transform EDA (depending on recording procedure) --> IN PROGRESS (results doesn't match what I have obtained with DFs)
+#if int(number_subject) < 23:
+#    EDA_array_transformed = EDA_array / 10**9
+#else:
+#    EDA_array_transformed = (10**9/EDA_array)*1000  
+    
+# 2) Clean signals
+#    -  Negative values            ==> 01 02 03 08 14 15
+#    -  Out-of-range values        ==> 26
+#    -  Sudden jumps in the signal ==> 31
+
+# 3) Change variable names (and x and y labels in plots)
+
 # Filter EDA:
 #  - Low pass  --> 5.00 Hz
 #  - High pass --> 0.05 Hz
 
-eda.filter(0.05, 5., fir_design='firwin', picks=['EDA'])
+picks_eda = mne.pick_channels(ch_names = eda.ch_names ,include=['EDA'])
+# https://mne.tools/0.15/generated/mne.io.Raw.html#mne.io.Raw.filter
+eda.filter(0.05, 5., fir_design='firwin', picks=picks_eda)
 
-#%%
 # Select and filter EEG data (not EOG)
-raw.pick_types(meg=False, ref_meg=False, eeg=True, eog=False).load_data()
-raw.filter(0.1, 120., fir_design='firwin')
+picks_eeg = raw.pick_types(eeg=True, eog=False)
+raw.filter(0.1, 120., fir_design='firwin', picks=picks_eeg)
 
 #%%
 # Build epochs as sliding windows over the continuous raw file
