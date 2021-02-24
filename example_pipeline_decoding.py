@@ -13,6 +13,9 @@ from mne import Epochs
 from mne.decoding import SPoC
 from mne.datasets.fieldtrip_cmc import data_path
 
+import numpy as np
+import matplotlib
+
 from sklearn.pipeline import make_pipeline
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import KFold, cross_val_predict
@@ -20,7 +23,7 @@ from sklearn.model_selection import KFold, cross_val_predict
 from my_functions import extract_signal
 from channel_names import channels_geneva, channels_twente 
 
-import numpy as np
+
 
 # Define parameters
 number_subject = '01'
@@ -59,18 +62,17 @@ picks_eda = mne.pick_channels(ch_names = eda.ch_names ,include=['EDA'])
 # Clean data --> apply function
 # https://mne.tools/dev/generated/mne.io.Raw.html#mne.io.Raw.apply_function
 
-# 1)  Transform EDA (depending on recording procedure) --> IN PROGRESS (results doesn't match what I have obtained with DFs)
-
-# Primera prueba --> ver si puedo hacer una transformacion simple (multiplicar por dos)
-#eda.apply_function(fun=lambda x: 2*x, picks=picks_eda)
+# 1)  Transform EDA (depending on recording procedure) --> 
+#     http://www.eecs.qmul.ac.uk/mmv/datasets/deap/readme.html
 
 if int(number_subject) < 23:
-    eda.apply_function(fun=lambda x: x/(10**9), picks=picks_eda)
+    eda.apply_function(fun=lambda x: x/1000, picks=picks_eda)
 else:
-    eda.apply_function(fun=lambda x: (10**9/x)*1000, picks=picks_eda)
+    eda.apply_function(fun=lambda x: (10**9/x)/1000, picks=picks_eda)
     
-# 2) Clean signals
+# 2) Clean signals --> SEGUIR DESDE ACA
 #    -  Negative values            ==> 01 02 03 08 14 15
+eda.apply_function(fun=lambda x: x[x >=0], picks=picks_eda)
 #    -  Out-of-range values        ==> 26
 #    -  Sudden jumps in the signal ==> 31
 
@@ -78,7 +80,6 @@ else:
 
 
 #%%
-
 # https://mne.tools/0.15/generated/mne.io.Raw.html#mne.io.Raw.filter
 # Filter EDA:
 #  - Low pass  --> 5.00 Hz
