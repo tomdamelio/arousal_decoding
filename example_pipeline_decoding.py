@@ -20,6 +20,8 @@ from sklearn.model_selection import KFold, cross_val_predict
 from my_functions import extract_signal
 from channel_names import channels_geneva, channels_twente 
 
+import numpy as np
+
 # Define parameters
 number_subject = '01'
 
@@ -51,16 +53,21 @@ raw.set_channel_types({'EXG1': 'eog',
 eda = raw.copy().pick_channels(['EDA'])
 # load_data would not be necessary. 
 # The function load_data() returns a list of paths that the requested data files located.
+picks_eda = mne.pick_channels(ch_names = eda.ch_names ,include=['EDA'])
 
-
+#%%
 # Clean data --> apply function
 # https://mne.tools/dev/generated/mne.io.Raw.html#mne.io.Raw.apply_function
 
 # 1)  Transform EDA (depending on recording procedure) --> IN PROGRESS (results doesn't match what I have obtained with DFs)
-#if int(number_subject) < 23:
-#    EDA_array_transformed = EDA_array / 10**9
-#else:
-#    EDA_array_transformed = (10**9/EDA_array)*1000  
+
+# Primera prueba --> ver si puedo hacer una transformacion simple (multiplicar por dos)
+#eda.apply_function(fun=lambda x: 2*x, picks=picks_eda)
+
+if int(number_subject) < 23:
+    eda.apply_function(fun=lambda x: x/(10**9), picks=picks_eda)
+else:
+    eda.apply_function(fun=lambda x: (10**9/x)*1000, picks=picks_eda)
     
 # 2) Clean signals
 #    -  Negative values            ==> 01 02 03 08 14 15
@@ -69,12 +76,13 @@ eda = raw.copy().pick_channels(['EDA'])
 
 # 3) Change variable names (and x and y labels in plots)
 
+
+#%%
+
+# https://mne.tools/0.15/generated/mne.io.Raw.html#mne.io.Raw.filter
 # Filter EDA:
 #  - Low pass  --> 5.00 Hz
 #  - High pass --> 0.05 Hz
-
-picks_eda = mne.pick_channels(ch_names = eda.ch_names ,include=['EDA'])
-# https://mne.tools/0.15/generated/mne.io.Raw.html#mne.io.Raw.filter
 eda.filter(0.05, 5., fir_design='firwin', picks=picks_eda)
 
 
