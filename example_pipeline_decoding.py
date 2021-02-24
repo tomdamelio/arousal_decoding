@@ -5,7 +5,6 @@
 # Link https://mne.tools/dev/auto_examples/decoding/plot_decoding_spoc_CMC.html#sphx-glr-auto-examples-decoding-plot-decoding-spoc-cmc-py
 
 #%%
-
 import matplotlib.pyplot as plt
 
 import mne
@@ -22,8 +21,6 @@ from sklearn.model_selection import KFold, cross_val_predict
 
 from my_functions import extract_signal
 from channel_names import channels_geneva, channels_twente 
-
-
 
 # Define parameters
 number_subject = '01'
@@ -53,10 +50,10 @@ raw.set_channel_types({'EXG1': 'eog',
                        'Temp': 'misc'})
 
 # Pick EDA
-raw_eda = raw.copy().pick_channels(['EDA'])
+#raw_eda = raw.copy().pick_channels(['EDA'])
 # load_data would not be necessary. 
 # The function load_data() returns a list of paths that the requested data files located.
-picks_eda = mne.pick_channels(ch_names = raw_eda.ch_names ,include=['EDA'])
+picks_eda = mne.pick_channels(ch_names = raw.ch_names ,include=['EDA'])
 
 
 # Clean data --> apply function
@@ -66,11 +63,10 @@ picks_eda = mne.pick_channels(ch_names = raw_eda.ch_names ,include=['EDA'])
 #     http://www.eecs.qmul.ac.uk/mmv/datasets/deap/readme.html
 
 if int(number_subject) < 23:
-    raw_eda.apply_function(fun=lambda x: x/1000, picks=picks_eda)
+    raw.apply_function(fun=lambda x: x/1000, picks=picks_eda)
 else:
-    raw_eda.apply_function(fun=lambda x: (10**9/x)/1000, picks=picks_eda)
+    raw.apply_function(fun=lambda x: (10**9/x)/1000, picks=picks_eda)
 
-#%%    
 # 2) Clean signals --> SEGUIR DESDE ACA
 #    -  Negative values            ==> 01 02 03 08 14 15
 
@@ -89,20 +85,17 @@ else:
 #    -  Sudden jumps in the signal ==> 31
 
 
-#%%
 # https://mne.tools/0.15/generated/mne.io.Raw.html#mne.io.Raw.filter
 # Filter EDA:
 #  - Low pass  --> 5.00 Hz
 #  - High pass --> 0.05 Hz
-eda.filter(0.05, 5., fir_design='firwin', picks=picks_eda)
-
+raw.filter(0.05, 5., fir_design='firwin', picks=picks_eda)
 
 # Select and filter EEG data (not EOG)
 picks_eeg = mne.pick_types(raw.info, eeg=True, eog=False)
 
 raw.filter(0.1, 120., fir_design='firwin', picks=picks_eeg)
 
-#%%
 # Build epochs as sliding windows over the continuous raw file
 # duration and overapls is in secods (because "raw.times" is in secods)
 events = mne.make_fixed_length_events(raw, id=1, duration=10.0, overlap= 2.0)
@@ -115,16 +108,17 @@ events = mne.make_fixed_length_events(raw, id=1, duration=10.0, overlap= 2.0)
 
 #%%
 # Epoch length is 1.5 second
-eeg_epochs = Epochs(raw=raw, events=events, tmin=0., tmax=0., baseline=None)
-eda_epochs = Epochs(raw=eda, events=events, tmin=0., tmax=0., baseline=None)
+raw_epochs = Epochs(raw=raw, events=events, tmin=0., tmax=0., baseline=None)
+#eda_epochs = Epochs(raw=raw_eda, events=events, tmin=0., tmax=0., baseline=None)
 
 
 #%%
 # Prepare classification
-X = eeg_epochs.get_data()
+X = raw_epochs.get_data(picks=picks_eeg)
 #y = eda_epochs.get_data().var(axis=2)[:, 0]  # target is EDA power
-y = eda_epochs.get_data()
+y = raw_epochs.get_data(picks=picks_eda)
 
+#%%
 # Classification pipeline with SPoC spatial filtering and Ridge Regression
 spoc = SPoC(n_components=2, log=True, reg='oas', rank='full')
 clf = make_pipeline(spoc, Ridge())
