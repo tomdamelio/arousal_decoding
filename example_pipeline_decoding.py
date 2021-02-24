@@ -4,7 +4,6 @@
 # License: BSD (3-clause)
 # Link https://mne.tools/dev/auto_examples/decoding/plot_decoding_spoc_CMC.html#sphx-glr-auto-examples-decoding-plot-decoding-spoc-cmc-py
 
-#%%
 import matplotlib.pyplot as plt
 
 import mne
@@ -106,26 +105,21 @@ events = mne.make_fixed_length_events(raw, id=1, duration=10.0, overlap= 2.0)
 #      endpoint of an event whose duration is longer than one sample.
 #  3 - integer event code --> always 1 because there are not different stim values
 
-#%%
 # Epoch length is 1.5 second
 raw_epochs = Epochs(raw=raw, events=events, tmin=0., tmax=0., baseline=None)
 #eda_epochs = Epochs(raw=raw_eda, events=events, tmin=0., tmax=0., baseline=None)
 
-
-#%%
 # Prepare classification
 X = raw_epochs.get_data(picks=picks_eeg)
 #y = eda_epochs.get_data().var(axis=2)[:, 0]  # target is EDA power
 y = raw_epochs.get_data(picks=picks_eda)
 
-#%%
 # Classification pipeline with SPoC spatial filtering and Ridge Regression
 spoc = SPoC(n_components=2, log=True, reg='oas', rank='full')
 clf = make_pipeline(spoc, Ridge())
 # Define a two fold cross-validation
 cv = KFold(n_splits=2, shuffle=False)
 
-#%%
 # Run cross validaton
 y_preds = cross_val_predict(clf, X, y, cv=cv)
 
@@ -140,4 +134,3 @@ ax.set_title('SPoC EEG Predictions')
 plt.legend()
 mne.viz.tight_layout()
 plt.show()
-# %%
