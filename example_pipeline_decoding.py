@@ -14,7 +14,7 @@ from mne.decoding import SPoC
 from mne.datasets.fieldtrip_cmc import data_path
 
 import numpy as np
-import matplotlib
+import matplotlib.pyplot as plt
 
 from sklearn.pipeline import make_pipeline
 from sklearn.linear_model import Ridge
@@ -53,12 +53,12 @@ raw.set_channel_types({'EXG1': 'eog',
                        'Temp': 'misc'})
 
 # Pick EDA
-eda = raw.copy().pick_channels(['EDA'])
+raw_eda = raw.copy().pick_channels(['EDA'])
 # load_data would not be necessary. 
 # The function load_data() returns a list of paths that the requested data files located.
-picks_eda = mne.pick_channels(ch_names = eda.ch_names ,include=['EDA'])
+picks_eda = mne.pick_channels(ch_names = raw_eda.ch_names ,include=['EDA'])
 
-#%%
+
 # Clean data --> apply function
 # https://mne.tools/dev/generated/mne.io.Raw.html#mne.io.Raw.apply_function
 
@@ -66,17 +66,27 @@ picks_eda = mne.pick_channels(ch_names = eda.ch_names ,include=['EDA'])
 #     http://www.eecs.qmul.ac.uk/mmv/datasets/deap/readme.html
 
 if int(number_subject) < 23:
-    eda.apply_function(fun=lambda x: x/1000, picks=picks_eda)
+    raw_eda.apply_function(fun=lambda x: x/1000, picks=picks_eda)
 else:
-    eda.apply_function(fun=lambda x: (10**9/x)/1000, picks=picks_eda)
-    
+    raw_eda.apply_function(fun=lambda x: (10**9/x)/1000, picks=picks_eda)
+
+#%%    
 # 2) Clean signals --> SEGUIR DESDE ACA
 #    -  Negative values            ==> 01 02 03 08 14 15
-eda.apply_function(fun=lambda x: x[x >=0], picks=picks_eda)
+
+# eda.apply_function(fun=lambda x: x[x >=0], picks=picks_eda)
+# ValueError: Return data must have shape (1980928,) not (1897734,)
+
+# transform raw to ndarray
+############  eda = raw_eda.get_data()
+# delete negative values from ndarray
+############  eda = eda[eda >=0]
+#eda = eda.reshape((1, eda.shape[0]))
+# put back ndarray to eda data
+############  raw_eda.add_channels(eda) 
+
 #    -  Out-of-range values        ==> 26
 #    -  Sudden jumps in the signal ==> 31
-
-# 3) Change variable names (and x and y labels in plots)
 
 
 #%%
