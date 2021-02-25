@@ -25,7 +25,7 @@ from channel_names import channels_geneva, channels_twente
 
 #%%
 
-# Define parameters
+# Define subject
 number_subject = '01'
 
 #Extract signal
@@ -77,7 +77,7 @@ raw.apply_function(fun=lambda x: out_of_range(x), picks=picks_eda)
 raw.filter(0.05, 5., fir_design='firwin', picks=picks_eda)
 
 # FIlter EEG
-raw.filter(0.1, 120., fir_design='firwin', picks=picks_eeg)
+raw.filter(0., 150., fir_design='firwin', picks=picks_eeg)
 
 # Downsample to 250 Hz 
 raw.resample(250.) 
@@ -96,8 +96,8 @@ epochs = Epochs(raw=raw, events=events, tmin=0., tmax=0., baseline=None)
 #eda_epochs = Epochs(raw=raw_eda, events=events, tmin=0., tmax=0., baseline=None)
 
 # Autoreject 
-reject = get_rejection_threshold(epochs, decim=2)
-# reject epochs
+reject = get_rejection_threshold(epochs, decim=1)
+# reject bad epochs
 epochs.drop_bad(reject=reject)
 
 # Prepare classification
