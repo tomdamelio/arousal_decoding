@@ -4,6 +4,7 @@
 # License: BSD (3-clause)
 # Link https://mne.tools/dev/auto_examples/decoding/plot_decoding_spoc_CMC.html#sphx-glr-auto-examples-decoding-plot-decoding-spoc-cmc-py
 
+#%%
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -19,8 +20,10 @@ from sklearn.pipeline import make_pipeline
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import KFold, cross_val_predict
 
-from my_functions import extract_signal
+from my_functions import extract_signal, transform_negative_to_zero, out_of_range
 from channel_names import channels_geneva, channels_twente 
+
+#%%
 
 # Define parameters
 number_subject = '01'
@@ -65,18 +68,10 @@ else:
 
 # 2) Clean signals --> 
 #    -  Negative values            ==> subjects 01 02 03 08 14 15
-def transform_negative_to_zero(x):
-    x[x<0] = 0
-    return x
-
 raw.apply_function(fun=lambda x: transform_negative_to_zero(x), picks=picks_eda)
 
 #    -  Out-of-range values        ==> 26
-def out_of_range(x):
-    x[x>40] = 0 # set 40 uS ad hoc
-    return x
-
-#raw.apply_function(fun=lambda x: out_of_range(x), picks=picks_eda)
+raw.apply_function(fun=lambda x: out_of_range(x), picks=picks_eda)
 
 # Filter EDA 
 raw.filter(0.05, 5., fir_design='firwin', picks=picks_eda)
@@ -84,7 +79,7 @@ raw.filter(0.05, 5., fir_design='firwin', picks=picks_eda)
 # FIlter EEG
 raw.filter(0.1, 120., fir_design='firwin', picks=picks_eeg)
 
-# Downsample to 250 Hz --> to reduce computation time. Is it necessary?
+# Downsample to 250 Hz 
 raw.resample(250.) 
 
 # Build epochs as sliding windows over the continuous raw file
