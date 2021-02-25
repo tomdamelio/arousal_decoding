@@ -4,6 +4,7 @@
 # License: BSD (3-clause)
 # Link https://mne.tools/dev/auto_examples/decoding/plot_decoding_spoc_CMC.html#sphx-glr-auto-examples-decoding-plot-decoding-spoc-cmc-py
 #%%
+
 import matplotlib.pyplot as plt
 
 import mne
@@ -21,8 +22,9 @@ from sklearn.model_selection import KFold, cross_val_predict
 from my_functions import extract_signal
 from channel_names import channels_geneva, channels_twente 
 
+#%%
 # Define parameters
-number_subject = '01'
+number_subject = '26'
 
 #Extract signal
 raw = extract_signal(directory = 'data', number_subject=number_subject,
@@ -68,7 +70,13 @@ else:
 
 # 2) Clean signals --> SEGUIR DESDE ACA
 #    -  Negative values            ==> 01 02 03 08 14 15
+def transform_negative_to_zero(x):
+    x[x<0] = 0
+    return x
 
+raw.apply_function(fun=lambda x: transform_negative(x), picks=picks_eda)
+
+#%%
 # eda.apply_function(fun=lambda x: x[x >=0], picks=picks_eda)
 # ValueError: Return data must have shape (1980928,) not (1897734,)
 
