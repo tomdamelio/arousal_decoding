@@ -58,8 +58,8 @@ def get_rejection_threshold(epochs, decim=1, random_state=None,
     from autoreject import get_rejection_threshold
     from autoreject.autoreject import _GlobalAutoReject
     from autoreject.bayesopt import expected_improvement, bayes_opt
-    import mne
     from mne import Epochs
+    from mne import pick_types
     reject = dict()
 
     if ch_types is not None and not isinstance(ch_types, (list, str)):
