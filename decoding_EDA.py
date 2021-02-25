@@ -22,10 +22,8 @@ from sklearn.pipeline import make_pipeline
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import KFold, cross_val_predict, cross_val_score, check_cv
 
-from my_functions import extract_signal, transform_negative_to_zero, out_of_range
+from my_functions import extract_signal, transform_negative_to_zero, out_of_range, get_rejection_threshold
 from channel_names import channels_geneva, channels_twente 
-
-#%%
 
 # Define subject
 number_subject = '01'
@@ -85,7 +83,7 @@ raw.filter(0., 50., fir_design='firwin', picks=picks_eeg)
 #raw.resample(250.) 
 
 # Build epochs as sliding windows over the continuous raw file
-events_reject = mne.make_fixed_length_events(raw, id=1, duration=2.0, overlap= 0.)
+events_reject = mne.make_fixed_length_events(raw, id=1, duration=2., overlap= 0.)
 # 3 values:
 #  1 - sample number
 #  2 - what the event code was on the immediately preceding sample.
@@ -93,112 +91,14 @@ events_reject = mne.make_fixed_length_events(raw, id=1, duration=2.0, overlap= 0
 #      endpoint of an event whose duration is longer than one sample.
 #  3 - integer event code --> always 1 because there are not different stim values
 
-# Epoch length is 1.5 second
 epochs_reject = Epochs(raw=raw, events=events_reject, tmin=0., tmax=2., baseline=None)
 #eda_epochs = Epochs(raw=raw_eda, events=events, tmin=0., tmax=0., baseline=None)
-
-def get_rejection_threshold(epochs, decim=1, random_state=None,
-                            ch_types=None, cv=5, verbose=True):
-    """Compute global rejection thresholds.
-    Parameters
-    ----------
-    epochs : mne.Epochs object
-        The epochs from which to estimate the epochs dictionary
-    decim : int
-        The decimation factor: Increment for selecting every nth time slice.
-    random_state : int seed, RandomState instance, or None (default)
-        The seed of the pseudo random number generator to use.
-    ch_types : str | list of str | None
-        The channel types for which to find the rejection dictionary.
-        e.g., ['mag', 'grad']. If None, the rejection dictionary
-        will have keys ['mag', 'grad', 'eeg', 'eog'].
-    cv : a scikit-learn cross-validation object
-        Defaults to cv=5
-    verbose : bool
-        If False, suppress all output messages.
-    Returns
-    -------
-    reject : dict
-        The rejection dictionary with keys as specified by ch_types.
-    Note
-    ----
-    Sensors marked as bad by user will be excluded when estimating the
-    rejection dictionary.
-    """
-    reject = dict()
-
-    if ch_types is not None and not isinstance(ch_types, (list, str)):
-        raise ValueError('ch_types must be of type None, list,'
-                         'or str. Got %s' % type(ch_types))
-
-    if ch_types is None:
-        ch_types = ['mag', 'grad', 'eeg', 'eog', 'misc']
-    elif isinstance(ch_types, str):
-        ch_types = [ch_types]
-
-    if decim > 1:
-        epochs = epochs.copy()
-        epochs.decimate(decim=decim)
-
-    cv = check_cv(cv)
-
-    for ch_type in ch_types:
-        if ch_type not in epochs:
-            continue
-
-        if ch_type == 'mag':
-            picks = pick_types(epochs.info, meg='mag', eeg=False)
-        elif ch_type == 'eeg':
-            picks = pick_types(epochs.info, meg=False, eeg=True)
-        elif ch_type == 'eog':
-            picks = pick_types(epochs.info, meg=False, eog=True)
-        elif ch_type == 'grad':
-            picks = pick_types(epochs.info, meg='grad', eeg=False)
-        elif ch_type == 'misc':
-            picks = pick_types(epochs.info, meg=False, eeg=False, misc=True)
-
-        X = epochs.get_data()[:, picks, :]
-        n_epochs, n_channels, n_times = X.shape
-        deltas = np.array([np.ptp(d, axis=1) for d in X])
-        all_threshes = np.sort(deltas.max(axis=1))
-
-        if verbose:
-            print('Estimating rejection dictionary for %s' % ch_type)
-        cache = dict()
-        est = _GlobalAutoReject(n_channels=n_channels, n_times=n_times)
-
-        def func(thresh):
-            idx = np.where(thresh - all_threshes >= 0)[0][-1]
-            thresh = all_threshes[idx]
-            if thresh not in cache:
-                est.set_params(thresh=thresh)
-                obj = -np.mean(cross_val_score(est, X, cv=cv))
-                cache.update({thresh: obj})
-            return cache[thresh]
-
-        n_epochs = all_threshes.shape[0]
-        idx = np.concatenate((
-            np.linspace(0, n_epochs, 5, endpoint=False, dtype=int),
-            [n_epochs - 1]))  # ensure last point is in init
-        idx = np.unique(idx)  # linspace may be non-unique if n_epochs < 5
-        initial_x = all_threshes[idx]
-        best_thresh, _ = bayes_opt(func, initial_x,
-                                   all_threshes,
-                                   expected_improvement,
-                                   max_iter=10, debug=False,
-                                   random_state=random_state)
-        reject[ch_type] = best_thresh
-
-    return reject
 
 # Autoreject 
 reject = get_rejection_threshold(epochs_reject, decim=1)
 
-#%%
-
-# reject bad epochs
+# Reject bad epochs
 epochs.drop_bad(reject=reject)
-
 
 #%%
 events = mne.make_fixed_length_events(raw, id=1, duration=10.0, overlap= 2.0)
