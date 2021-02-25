@@ -13,7 +13,8 @@ from mne import Epochs
 from mne.decoding import SPoC
 from mne.datasets.fieldtrip_cmc import data_path
 
-import autoreject
+from autoreject import get_rejection_threshold
+
 
 from sklearn.pipeline import make_pipeline
 from sklearn.linear_model import Ridge
@@ -85,11 +86,9 @@ raw.filter(0.05, 5., fir_design='firwin', picks=picks_eda)
 # FIlter EEG
 raw.filter(0.1, 120., fir_design='firwin', picks=picks_eeg)
 
-#%%
 # Downsample to 250 Hz --> to reduce computation time. Is it necessary?
 raw.resample(250.) 
 
-#%%
 # Build epochs as sliding windows over the continuous raw file
 events = mne.make_fixed_length_events(raw, id=1, duration=10.0, overlap= 2.0)
 # 3 values:
@@ -103,6 +102,8 @@ events = mne.make_fixed_length_events(raw, id=1, duration=10.0, overlap= 2.0)
 epochs = Epochs(raw=raw, events=events, tmin=0., tmax=0., baseline=None)
 #eda_epochs = Epochs(raw=raw_eda, events=events, tmin=0., tmax=0., baseline=None)
 
+#%%
+reject = get_rejection_threshold(epochs, decim=2)
 #%%
 # Prepare classification
 X = raw_epochs.get_data(picks=picks_eeg)
