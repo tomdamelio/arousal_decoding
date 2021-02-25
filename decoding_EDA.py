@@ -24,7 +24,7 @@ from channel_names import channels_geneva, channels_twente
 
 #%%
 # Define parameters
-number_subject = '26'
+number_subject = '01'
 
 #Extract signal
 raw = extract_signal(directory = 'data', number_subject=number_subject,
@@ -50,15 +50,11 @@ raw.set_channel_types({'EXG1': 'eog',
                        'Plet': 'misc',
                        'Temp': 'misc'})
 
-# Pick EDA
-#raw_eda = raw.copy().pick_channels(['EDA'])
-# load_data would not be necessary. 
-# The function load_data() returns a list of paths that the requested data files located.
+# Pick EDA and EEG
 picks_eda = mne.pick_channels(ch_names = raw.ch_names ,include=['EDA'])
+picks_eeg = mne.pick_types(raw.info, eeg=True, eog=False)
 
-
-# Clean data --> apply function
-# https://mne.tools/dev/generated/mne.io.Raw.html#mne.io.Raw.apply_function
+# Clean data 
 
 # 1)  Transform EDA (depending on recording procedure) --> 
 #     http://www.eecs.qmul.ac.uk/mmv/datasets/deap/readme.html
@@ -68,43 +64,29 @@ if int(number_subject) < 23:
 else:
     raw.apply_function(fun=lambda x: (10**9/x)/1000, picks=picks_eda)
 
-# 2) Clean signals --> SEGUIR DESDE ACA
-#    -  Negative values            ==> 01 02 03 08 14 15
+# 2) Clean signals --> 
+#    -  Negative values            ==> subjects 01 02 03 08 14 15
 def transform_negative_to_zero(x):
     x[x<0] = 0
     return x
 
-raw.apply_function(fun=lambda x: transform_negative(x), picks=picks_eda)
-
-#%%
-# eda.apply_function(fun=lambda x: x[x >=0], picks=picks_eda)
-# ValueError: Return data must have shape (1980928,) not (1897734,)
-
-# transform raw to ndarray
-############  eda = raw_eda.get_data()
-# delete negative values from ndarray
-############  eda = eda[eda >=0]
-#eda = eda.reshape((1, eda.shape[0]))
-# put back ndarray to eda data
-############  raw_eda.add_channels(eda) 
+raw.apply_function(fun=lambda x: transform_negative_to_zero(x), picks=picks_eda)
 
 #    -  Out-of-range values        ==> 26
-#    -  Sudden jumps in the signal ==> 31
+def out_of_range(x):
+    x[x>40] = 0 # set 40 uS ad hoc
+    return x
 
+raw.apply_function(fun=lambda x: out_of_range(x), picks=picks_eda)
 
-# https://mne.tools/0.15/generated/mne.io.Raw.html#mne.io.Raw.filter
-# Filter EDA:
-#  - Low pass  --> 5.00 Hz
-#  - High pass --> 0.05 Hz
+# Filter EDA 
 raw.filter(0.05, 5., fir_design='firwin', picks=picks_eda)
 
-# Select and filter EEG data (not EOG)
-picks_eeg = mne.pick_types(raw.info, eeg=True, eog=False)
-
+# FIlter EEG
 raw.filter(0.1, 120., fir_design='firwin', picks=picks_eeg)
 
+#%%
 # Build epochs as sliding windows over the continuous raw file
-# duration and overapls is in secods (because "raw.times" is in secods)
 events = mne.make_fixed_length_events(raw, id=1, duration=10.0, overlap= 2.0)
 # 3 values:
 #  1 - sample number
@@ -117,6 +99,7 @@ events = mne.make_fixed_length_events(raw, id=1, duration=10.0, overlap= 2.0)
 raw_epochs = Epochs(raw=raw, events=events, tmin=0., tmax=0., baseline=None)
 #eda_epochs = Epochs(raw=raw_eda, events=events, tmin=0., tmax=0., baseline=None)
 
+#%%
 # Prepare classification
 X = raw_epochs.get_data(picks=picks_eeg)
 #y = eda_epochs.get_data().var(axis=2)[:, 0]  # target is EDA power
