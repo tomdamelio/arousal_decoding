@@ -3,7 +3,6 @@
 #
 # License: BSD (3-clause)
 # Link https://mne.tools/dev/auto_examples/decoding/plot_decoding_spoc_CMC.html#sphx-glr-auto-examples-decoding-plot-decoding-spoc-cmc-py
-#%%
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,7 +22,6 @@ from sklearn.model_selection import KFold, cross_val_predict
 from my_functions import extract_signal
 from channel_names import channels_geneva, channels_twente 
 
-#%%
 # Define parameters
 number_subject = '01'
 
@@ -78,7 +76,7 @@ def out_of_range(x):
     x[x>40] = 0 # set 40 uS ad hoc
     return x
 
-raw.apply_function(fun=lambda x: out_of_range(x), picks=picks_eda)
+#raw.apply_function(fun=lambda x: out_of_range(x), picks=picks_eda)
 
 # Filter EDA 
 raw.filter(0.05, 5., fir_design='firwin', picks=picks_eda)
@@ -102,9 +100,11 @@ events = mne.make_fixed_length_events(raw, id=1, duration=10.0, overlap= 2.0)
 epochs = Epochs(raw=raw, events=events, tmin=0., tmax=0., baseline=None)
 #eda_epochs = Epochs(raw=raw_eda, events=events, tmin=0., tmax=0., baseline=None)
 
-#%%
+# Autoreject 
 reject = get_rejection_threshold(epochs, decim=2)
-#%%
+# reject epochs
+epochs.drop_bad(reject=reject)
+
 # Prepare classification
 X = raw_epochs.get_data(picks=picks_eeg)
 #y = eda_epochs.get_data().var(axis=2)[:, 0]  # target is EDA power
@@ -116,11 +116,9 @@ clf = make_pipeline(spoc, Ridge())
 # Define a two fold cross-validation
 cv = KFold(n_splits=2, shuffle=False)
 
-#%%
 # Run cross validaton
 y_preds = cross_val_predict(clf, X, y, cv=cv)
 
-#%%
 # Plot the True EMG power and the EMG power predicted from MEG data
 fig, ax = plt.subplots(1, 1, figsize=[10, 4])
 times = raw.times[eeg_epochs.events[:, 0] - raw.first_samp]
