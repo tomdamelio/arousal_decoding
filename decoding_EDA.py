@@ -5,6 +5,7 @@
 # Link https://mne.tools/dev/auto_examples/decoding/plot_decoding_spoc_CMC.html#sphx-glr-auto-examples-decoding-plot-decoding-spoc-cmc-py
 #%%
 
+import numpy as np
 import matplotlib.pyplot as plt
 
 import mne
@@ -12,8 +13,7 @@ from mne import Epochs
 from mne.decoding import SPoC
 from mne.datasets.fieldtrip_cmc import data_path
 
-import numpy as np
-import matplotlib.pyplot as plt
+import autoreject
 
 from sklearn.pipeline import make_pipeline
 from sklearn.linear_model import Ridge
@@ -86,6 +86,10 @@ raw.filter(0.05, 5., fir_design='firwin', picks=picks_eda)
 raw.filter(0.1, 120., fir_design='firwin', picks=picks_eeg)
 
 #%%
+# Downsample to 250 Hz --> to reduce computation time. Is it necessary?
+raw.resample(250.) 
+
+#%%
 # Build epochs as sliding windows over the continuous raw file
 events = mne.make_fixed_length_events(raw, id=1, duration=10.0, overlap= 2.0)
 # 3 values:
@@ -96,7 +100,7 @@ events = mne.make_fixed_length_events(raw, id=1, duration=10.0, overlap= 2.0)
 #  3 - integer event code --> always 1 because there are not different stim values
 
 # Epoch length is 1.5 second
-raw_epochs = Epochs(raw=raw, events=events, tmin=0., tmax=0., baseline=None)
+epochs = Epochs(raw=raw, events=events, tmin=0., tmax=0., baseline=None)
 #eda_epochs = Epochs(raw=raw_eda, events=events, tmin=0., tmax=0., baseline=None)
 
 #%%
