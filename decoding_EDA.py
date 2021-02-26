@@ -4,7 +4,6 @@
 # License: BSD (3-clause)
 # Link https://mne.tools/dev/auto_examples/decoding/plot_decoding_spoc_CMC.html#sphx-glr-auto-examples-decoding-plot-decoding-spoc-cmc-py
 
-#%%
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -26,7 +25,7 @@ from my_functions import extract_signal, transform_negative_to_zero, out_of_rang
 from channel_names import channels_geneva, channels_twente 
 
 # Define subject
-number_subject = '01'
+number_subject = '26'
 
 #Extract signal
 raw = extract_signal(directory = 'data', number_subject=number_subject,
@@ -97,18 +96,18 @@ epochs_reject = Epochs(raw=raw, events=events_reject, tmin=0., tmax=2., baseline
 # Autoreject 
 reject = get_rejection_threshold(epochs_reject, decim=1)
 
-# Reject bad epochs
-epochs.drop_bad(reject=reject)
+reject.update({'misc': '3.'}) # 3 times typucal phasic incrase in conductance (Boucsein, 2012)
 
-#%%
 events = mne.make_fixed_length_events(raw, id=1, duration=10.0, overlap= 2.0)
 epochs = Epochs(raw=raw, events=events, tmin=0., tmax=10., baseline=None)
 
-#%%
+# Reject bad epochs
+epochs.drop_bad(reject=reject)
+
 # Prepare classification
-X = raw_epochs.get_data(picks=picks_eeg)
+X = epochs.get_data(picks=picks_eeg)
 #y = eda_epochs.get_data().var(axis=2)[:, 0]  # target is EDA power
-y = raw_epochs.get_data(picks=picks_eda)
+y = epochs.get_data(picks=picks_eda)
 
 # Classification pipeline with SPoC spatial filtering and Ridge Regression
 spoc = SPoC(n_components=2, log=True, reg='oas', rank='full')
@@ -119,7 +118,7 @@ cv = KFold(n_splits=2, shuffle=False)
 # Run cross validaton
 y_preds = cross_val_predict(clf, X, y, cv=cv)
 
-# Plot the True EMG power and the EMG power predicted from MEG data
+# Plot the True EDA power and the EDA predicted from EEG data
 fig, ax = plt.subplots(1, 1, figsize=[10, 4])
 times = raw.times[eeg_epochs.events[:, 0] - raw.first_samp]
 ax.plot(times, y_preds, color='b', label='Predicted EMG')
@@ -130,3 +129,5 @@ ax.set_title('SPoC EEG Predictions')
 plt.legend()
 mne.viz.tight_layout()
 plt.show()
+
+# %%
