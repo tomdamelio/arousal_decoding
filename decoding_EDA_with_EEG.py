@@ -3,7 +3,7 @@
 #
 # License: BSD (3-clause)
 # Link https://mne.tools/dev/auto_examples/decoding/plot_decoding_spoc_CMC.html#sphx-glr-auto-examples-decoding-plot-decoding-spoc-cmc-py
-
+#%%
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -81,6 +81,7 @@ raw.filter(0., 50., fir_design='firwin', picks=picks_eeg)
 # Downsample to 250 Hz 
 #raw.resample(250.) 
 
+#%%
 # Build epochs as sliding windows over the continuous raw file
 events_reject = mne.make_fixed_length_events(raw, id=1, duration=10., overlap= 2.)
 
@@ -101,6 +102,7 @@ epochs = epochs_reject
 # Reject bad epochs
 epochs.drop_bad(reject=reject)
 
+#%%
 # Prepare classification
 X = epochs.get_data(picks=picks_eeg)
 #y = eda_epochs.get_data().var(axis=2)[:, 0]  # target is EDA power
@@ -112,6 +114,7 @@ clf = make_pipeline(spoc, Ridge())
 # Define a two fold cross-validation
 cv = KFold(n_splits=2, shuffle=False)
 
+#%%
 # Run cross validaton
 y_preds = cross_val_predict(clf, X, y, cv=cv)
 
