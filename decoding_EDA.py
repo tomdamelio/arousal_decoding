@@ -103,8 +103,8 @@ epochs.drop_bad(reject=reject)
 
 # Prepare classification
 X = epochs.get_data(picks=picks_eeg)
-#y = eda_epochs.get_data().var(axis=2)[:, 0]  # target is EDA power
-y = epochs.get_data(picks=picks_eda)
+#y = epochs.get_data().var(axis=2)[:, 0]  # target is EDA power
+y = y_aux= epochs.get_data(picks=picks_eda).var(axis=2)
 
 # Classification pipeline with SPoC spatial filtering and Ridge Regression
 spoc = SPoC(n_components=2, log=True, reg='oas', rank='full')
@@ -117,7 +117,7 @@ y_preds = cross_val_predict(clf, X, y, cv=cv)
 
 # Plot the True EDA power and the EDA predicted from EEG data
 fig, ax = plt.subplots(1, 1, figsize=[10, 4])
-times = raw.times[eeg_epochs.events[:, 0] - raw.first_samp]
+times = raw.times[epochs.events[:, 0] - raw.first_samp]
 ax.plot(times, y_preds, color='b', label='Predicted EMG')
 ax.plot(times, y, color='r', label='True EMG')
 ax.set_xlabel('Time (s)')
@@ -126,4 +126,3 @@ ax.set_title('SPoC EEG Predictions')
 plt.legend()
 mne.viz.tight_layout()
 plt.show()
-
