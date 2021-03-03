@@ -4,6 +4,8 @@
 # License: BSD (3-clause)
 # Link https://mne.tools/dev/auto_examples/decoding/plot_decoding_spoc_CMC.html#sphx-glr-auto-examples-decoding-plot-decoding-spoc-cmc-py
 
+#%%
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -25,7 +27,7 @@ from my_functions import extract_signal, transform_negative_to_zero, out_of_rang
 from channel_names import channels_geneva, channels_twente 
 
 # Define subject
-number_subject = '26'
+number_subject = '02'
 
 #Extract signal
 raw = extract_signal(directory = 'data', number_subject=number_subject,
@@ -101,6 +103,7 @@ epochs = epochs_reject
 # Reject bad epochs
 epochs.drop_bad(reject=reject)
 
+#%%
 # Prepare classification
 X = epochs.get_data(picks=picks_eeg)
 #y = epochs.get_data().var(axis=2)[:, 0]  # target is EDA power
