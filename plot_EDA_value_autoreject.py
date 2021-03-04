@@ -1,3 +1,4 @@
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -22,7 +23,8 @@ from subject_number import subject_number
 
 reject_values = []
 epochs_rejected_values = []
-for number_subject in subject_number:
+subject_number_reduced = ['01','08', '16', '24', '32']
+for number_subject in subject_number_reduced:
     #Extract signal
     raw = extract_signal(directory = 'data', number_subject=number_subject,
                         extension = '.bdf')
@@ -47,6 +49,9 @@ for number_subject in subject_number:
                         'Plet': 'misc',
                         'Temp': 'misc'})
 
+    raw.drop_channels(['GSR2', 'EXG5', 'EXG6', 'EXG7', 'EXG8',
+                       'Erg1', 'Erg2', 'Resp', 'Plet', 'Temp' ])
+    
     # Pick EDA and EEG
     picks_eda = mne.pick_channels(ch_names = raw.ch_names ,include=['EDA'])
     picks_eeg = mne.pick_types(raw.info, eeg=True, eog=False)
@@ -78,30 +83,24 @@ for number_subject in subject_number:
     #raw.resample(250.) 
 
     # Build epochs as sliding windows over the continuous raw file
-    events_reject = mne.make_fixed_length_events(raw, id=1, duration=10., overlap= 2.)
+    events = mne.make_fixed_length_events(raw, id=1, duration=5., overlap= 2.)
 
 
-    epochs_reject = Epochs(raw, events_reject, tmin=0., tmax=10., baseline=None)
+    epochs = Epochs(raw, events, tmin=0., tmax=10., baseline=None)
     #eda_epochs = Epochs(raw=raw_eda, events=events, tmin=0., tmax=0., baseline=None)
 
     # Autoreject 
-    reject = get_rejection_threshold(epochs_reject, decim=1, verbose=False)
+    reject = get_rejection_threshold(epochs, decim=1, verbose=False)
 
-    #reject.update({'misc': '3.'}) # 3 times typical phasic incrase in conductance (Boucsein, 2012)
+    reject.update({'misc': 10.}) # 3 times typical phasic incrase in conductance (Boucsein, 2012)
 
     reject_values.append(reject)
     
     # Reject bad epochs
-    epochs_reject.drop_bad(reject=reject)
-    epochs_rejected_values.append([events_reject.shape[0], epochs_reject.__len__()])
+    epochs.drop_bad(reject=reject)
+    epochs_rejected_values.append([events.shape[0], epochs.__len__()])
     
 print(reject_values)
-
-
-# %%
-import matplotlib
-import matplotlib.pyplot as plt
-import numpy as np
 
 # n epochs total
 epochs_rejected_values_total = [item[0] for item in epochs_rejected_values]
@@ -109,11 +108,7 @@ epochs_rejected_values_total = [item[0] for item in epochs_rejected_values]
 # n epochs after rejection
 epochs_rejected_values_rejected = [item[1] for item in epochs_rejected_values]
 
-labels = ['G1', 'G2', 'G3', 'G4', 'G5']
-men_means = [20, 34, 30, 35, 27]
-women_means = [25, 32, 34, 20, 25]
-
-x = np.arange(len(subject_number))  # the label locations
+x = np.arange(len(subject_number_reduced))  # the label locations
 width = 0.35  # the width of the bars
 
 fig, ax = plt.subplots()
@@ -124,7 +119,7 @@ rects2 = ax.bar(x + width/2, epochs_rejected_values_rejected, width, label='Afte
 ax.set_ylabel('Epochs')
 ax.set_title('Number of epochs (total and after rejection)')
 ax.set_xticks(x)
-ax.set_xticklabels(subject_number)
+ax.set_xticklabels(subject_number_reduced)
 ax.legend()
 
 
@@ -145,33 +140,33 @@ def autolabel(rects):
 fig.set_size_inches(10., 5.)
 
 plt.show()
-# %%
 
-with open("epochs_rejected_values_rejected.txt", "w") as output:
-    output.write(str(epochs_rejected_values_rejected))
+
+#with open("epochs_rejected_values_rejected.txt", "w") as output:
+#    output.write(str(epochs_rejected_values_rejected))
     
-with open("epochs_rejected_values_total.txt", "w") as output:
-    output.write(str(epochs_rejected_values_total))
+#with open("epochs_rejected_values_total.txt", "w") as output:
+#    output.write(str(epochs_rejected_values_total))
+
+#with open("reject_values.txt", "w") as output:
+#    output.write(str(reject_values))
 
 #%%
-with open("epochs_rejected_values_rejected.txt") as f:
-    epochs_rejected_values_rejected = f.read().splitlines()
+#with open("epochs_rejected_values_rejected.txt") as f:
+#    epochs_rejected_values_rejected = f.read().splitlines()
 
-with open("epochs_rejected_values_total.txt") as f:
-    epochs_rejected_values_total = f.read().splitlines()
+#with open("epochs_rejected_values_total.txt") as f:
+#    epochs_rejected_values_total = f.read().splitlines()
 
+#with open("reject_values.txt") as f:
+#    reject_values = f.read().splitlines()
 
-epochs_rejected_values_rejected_aux = [89,51,51,410,0,9,47,22,189,61,66,31,24,140,59,1,87,
-                                   272,94,54,253,75,111,117,36,235,123,21,43,78,10,176]
-# %%
-misc_values = []
-eog_values = []
-eeg_values = []
-for i in reject_values:
-    eeg_values.append(list(i.values())[0])
-    eog_values.append(list(i.values())[1])
-    misc_values.append(list(i.values())[2])
+#misc_values = []
+#eog_values = []
+#eeg_values = []
+#for i in reject_values:
+#    eeg_values.append(list(i.values())[0])
+#    eog_values.append(list(i.values())[1])
+#    misc_values.append(list(i.values())[2])
 
-# %%
-plt.hist(misc_values)
-# %%
+#plt.hist(misc_values)
