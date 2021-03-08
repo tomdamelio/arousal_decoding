@@ -2,8 +2,8 @@
 - input   --> -
 - process --> channels' order according to location (twente or geneva)
 - output  -->
-    -     channels_twente --> list. Order of channels according to twente configutarion
-    -     channels_geneva --> list. Order of channels according to geneva configutarion
+    -   channels_twente --> list. Order of channels according to twente configutarion
+    -   channels_geneva --> list. Order of channels according to geneva configutarion
 
 ## decoding_EDA_with_EEG.py
 - input   --> one subject (fixed on subject 26)
@@ -86,7 +86,7 @@
 - comment --> DEPRECATED. We are going to use band pass filter from MNE 
 
 ## subject_number.py
- -input   --> -
+- input   --> -
 - process --> create list with number of the subjects
 - output  --> list 'subject_number'. Lenght: 32
 
