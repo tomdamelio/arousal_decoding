@@ -6,10 +6,11 @@
     -   channels_geneva --> list. Order of channels according to geneva configutarion
 
 ## decoding_EDA_with_EEG.py
+SCRIPT IN PROGRESS
 - input   --> one subject (fixed on subject 26)
 - process --> EDA prediction from EEG
 - output  --> Plot the True EDA power and the EDA predicted from EEG data 
-- comment --> DEPRECATED. ValueError. I was trying to predict the signal and not a variance.
+- comment --> CORRECTED BY DENIS
 
 ## decoding_EDA_with_error.py
 - input   --> one subject (fixed on subject 01)
