@@ -3,9 +3,14 @@
 #
 # License: BSD (3-clause)
 # Link https://mne.tools/dev/auto_examples/decoding/plot_decoding_spoc_CMC.html#sphx-glr-auto-examples-decoding-plot-decoding-spoc-cmc-py
+
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
+import copy
+import pandas as pd
+import os.path as op
+import config as cfg
 
 import mne
 from mne import Epochs
@@ -19,20 +24,19 @@ from autoreject.bayesopt import expected_improvement, bayes_opt
 
 from sklearn.pipeline import make_pipeline
 from sklearn.linear_model import Ridge, RidgeCV
-from sklearn.model_selection import KFold, cross_val_predict, cross_val_score, check_cv
+from sklearn.model_selection import KFold, cross_val_predict, cross_val_score, check_cv, ShuffleSplit
+from sklearn.preprocessing import StandardScaler
+from sklearn.dummy import DummyRegressor
 
 from preprocessing import extract_signal, transform_negative_to_zero, out_of_range, get_rejection_threshold
 from channel_names import channels_geneva, channels_twente 
 
-#%%
 from joblib import Parallel, delayed
 
-#%%
 from library.spfiltering import (
     ProjIdentitySpace, ProjCommonSpace, ProjSPoCSpace)
 from library.featuring import Riemann, LogDiag, NaiveVec
 
-#%%
 # Define subject
 number_subject = '01'
 
@@ -90,7 +94,6 @@ raw.filter(8., 13., fir_design='firwin', picks=picks_eeg)
 # Downsample to 250 Hz 
 #raw.resample(250.) 
 
-#%%
 # Build epochs as sliding windows over the continuous raw file
 events_reject = mne.make_fixed_length_events(raw, id=1, duration=5., overlap=0.)
 
@@ -110,13 +113,11 @@ epochs = Epochs(raw=raw, events=events, tmin=0., tmax=10., baseline=None)
 # Reject bad epochs
 epochs.drop_bad(reject={k: v for k, v in reject.items() if k != "misc"})
 
-#%%
 # Prepare classification
 X = epochs.get_data(picks=picks_eeg)
 #y = eda_epochs.get_data().var(axis=2)[:, 0]  # target is EDA power
 y = epochs.get_data(picks=picks_eda).mean(axis=2)[:, 0]
 
-#%%
 n_compo = 21
 n_components = np.arange(n_compo)+1
 scale = 'auto'
@@ -129,115 +130,16 @@ n_jobs = 40
 
 ridge_shrinkage = np.logspace(-3, 5, 100)
 
-pipelines = {
-    'dummy': make_pipeline(
-                            ProjIdentitySpace(),
-                            LogDiag(),
-                            StandardScaler(),
-                            DummyRegressor()
-                            ),
-    'naive': make_pipeline(
-                            ProjIdentitySpace(),
-                            NaiveVec(method='upper'),
-                            StandardScaler(),
-                            RidgeCV(alphas=ridge_shrinkage)
-                            ),
-    'log-diag': make_pipeline(
-                               ProjIdentitySpace(),
-                               LogDiag(),
-                               StandardScaler(),
-                               RidgeCV(alphas=ridge_shrinkage)
-                               ),
-    'spoc': make_pipeline(
-                           ProjSPoCSpace(n_compo=n_compo, scale=scale,
-                                         reg=0, shrink=shrink),
-                           LogDiag(),
-                           StandardScaler(),
-                           RidgeCV(alphas=ridge_shrinkage)
-                           ),
-    'riemann': make_pipeline(
-                              ProjCommonSpace(scale=scale, n_compo=n_compo,
-                                              reg=1.e-05),
-                              Riemann(n_fb=n_fb, metric=metric),
-                              StandardScaler(),
-                              RidgeCV(alphas=ridge_shrinkage)
-                              )
-}
-
-
-def run_low_rank(n_components, X, y, cv, estimators, scoring):
-    out = dict(n_components=n_components)
-    for name, est in estimators.items():
-        print(name, n_components)
-        this_est = est
-        this_est.steps[0][1].n_compo = n_components
-        scores = cross_val_score(
-            X=X, y=y, cv=copy.deepcopy(cv), estimator=this_est,
-            n_jobs=1,
-            scoring=scoring)
-        if scoring == 'neg_mean_absolute_error':
-            scores = -scores
-        print(np.mean(scores), f"+/-{np.std(scores)}")
-        out[name] = scores
-    return out
-
-
-low_rank_estimators = {k: v for k, v in pipelines.items()
-                       if k in ('spoc', 'riemann')}
-
-out_list = Parallel(n_jobs=n_jobs)(delayed(run_low_rank)(
-    n_components=cc, X=X, y=y,
-    cv=ShuffleSplit(test_size=.1, n_splits=10, random_state=seed),
-    estimators=low_rank_estimators, scoring='neg_mean_absolute_error')
-    for cc in n_components)
-
-out_frames = list()
-for this_dict in out_list:
-    this_df = pd.DataFrame({'spoc': this_dict['spoc'],
-                            'riemann': this_dict['riemann']})
-    this_df['n_components'] = this_dict['n_components']
-    this_df['fold_idx'] = np.arange(len(this_df))
-    out_frames.append(this_df)
-
-out_df = pd.concat(out_frames)
-out_df.to_csv(op.join(cfg.path_outputs, "tuh_component_scores.csv"))
-
-mean_df = out_df.groupby('n_components').mean().reset_index()
-best_components = {
-    'spoc': mean_df['n_components'][mean_df['spoc'].argmin()],
-    'riemann': mean_df['n_components'][mean_df['riemann'].argmin()]
-}
-
-pipelines[f"spoc_{best_components['spoc']}"] = make_pipeline(
-    ProjSPoCSpace(n_compo=best_components['spoc'],
-                  scale=scale, reg=0, shrink=shrink),
-    LogDiag(),
-    StandardScaler(),
-    RidgeCV(alphas=ridge_shrinkage))
-
-pipelines[f"riemann_{best_components['riemann']}"] = make_pipeline(
-    ProjCommonSpace(scale=scale, n_compo=best_components['riemann'],
+riemann_model = make_pipeline(    
+    ProjCommonSpace(scale=scale, #n_compo=best_components['riemann'],
                     reg=1.e-05),
     Riemann(metric=metric), #n_fb=n_fb 
     StandardScaler(),
     RidgeCV(alphas=ridge_shrinkage))
 
-#%%
-
-
-
-#%%
-# Classification pipeline with SPoC spatial filtering and Ridge Regression
-#spoc = SPoC(n_components=15, log=True, reg='oas')
-
-#clf = make_pipeline(spoc, Ridge())
-# Define a two fold cross-validation
 cv = KFold(n_splits=2, shuffle=False)
-
-#%%
 # Run cross validaton
-#y_preds = cross_val_predict(clf, X, y, cv=cv)
-y_preds = cross_val_predict(riemann, X, y, cv=cv)
+y_preds = cross_val_predict(riemann_model, X, y, cv=cv)
 
 # Plot the True EDA power and the EDA predicted from EEG data
 fig, ax = plt.subplots(1, 1, figsize=[10, 4])
@@ -250,6 +152,3 @@ ax.set_title('SPoC EEG Predictions')
 plt.legend()
 mne.viz.tight_layout()
 plt.show()
-
-
-# %%
