@@ -104,28 +104,29 @@ bdfs = glob.glob("data/*.bdf")
                     
 subjects = sorted(list(set([bdf.split('\\')[-1] for bdf in bdfs])))
 
-#%%
 raw = mne.io.read_raw_bdf(rawfile_of(subjects[0]))
 common_chs = set(raw.info['ch_names'])
 
-#%%
 for sub in subjects[1:]:
     raw = mne.io.read_raw_bdf(rawfile_of(sub))
     chs = set(raw.info['ch_names'])
     common_chs = common_chs.intersection(chs)
     
-#%%
 common_chs -= {'EXG5', 'EXG6', 'EXG7', 'EXG8'
                'GSR2', 'Erg1', 'Erg2', 'Resp'
                'Plet', 'Temp'}
 
 #%%
-out = Parallel(n_jobs=1)(
-    delayed(_run_all)(subject=subject)
-    for subject in subjects)
+subject_1 = ['s01.bdf']
 
 #%%
-fname_covs = op.join(cfg.derivative_path, 'covs_tuh_oas.h5')
+out = Parallel(n_jobs=1)(
+    delayed(_run_all)(subject=subject)
+    for subject in subject_1)
+
+#%%
+fname_covs = op.join('data', 'covs_s01.h5')
+#%%
 mne.externals.h5io.write_hdf5(fname_covs, out, overwrite=True)
 
 #  age = np.array([age_of(subject) for subject in subjects])
