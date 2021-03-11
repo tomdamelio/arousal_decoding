@@ -116,17 +116,12 @@ common_chs -= {'EXG5', 'EXG6', 'EXG7', 'EXG8'
                'GSR2', 'Erg1', 'Erg2', 'Resp'
                'Plet', 'Temp'}
 
-#%%
-subject_1 = ['s01.bdf']
-
-#%%
 out = Parallel(n_jobs=1)(
     delayed(_run_all)(subject=subject)
-    for subject in subject_1)
+    for subject in subjects)
 
 #%%
 fname_covs = op.join('data', 'covs_s01.h5')
-#%%
 mne.externals.h5io.write_hdf5(fname_covs, out, overwrite=True)
 
 #  age = np.array([age_of(subject) for subject in subjects])
