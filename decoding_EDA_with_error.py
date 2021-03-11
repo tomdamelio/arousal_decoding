@@ -3,7 +3,9 @@
 #
 # License: BSD (3-clause)
 # Link https://mne.tools/dev/auto_examples/decoding/plot_decoding_spoc_CMC.html#sphx-glr-auto-examples-decoding-plot-decoding-spoc-cmc-py
+
 #%%
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -25,12 +27,12 @@ from preprocessing import extract_signal, transform_negative_to_zero, out_of_ran
 from channel_names import channels_geneva, channels_twente 
 
 # Define subject
-number_subject = '26'
+number_subject = '01'
 
 #Extract signal
 raw = extract_signal(directory = 'data', number_subject=number_subject,
                      extension = '.bdf')
-raw.drop_channels('')
+
 # Rename channel EDA and set GSR as channel type
 raw.rename_channels(mapping={'GSR1':'EDA'})
 # raw.ch_names # Reutrn list of channels
@@ -76,57 +78,59 @@ raw.apply_function(fun=transform_negative_to_zero, picks=picks_eda)
 raw.filter(0.05, 5., fir_design='firwin', picks=picks_eda)
 
 # FIlter EEG
-raw.filter(8., 13., fir_design='firwin', picks=picks_eeg)
+raw.filter(0., 50., fir_design='firwin', picks=picks_eeg)
+
 # Downsample to 250 Hz 
 #raw.resample(250.) 
 
-#%%
 # Build epochs as sliding windows over the continuous raw file
-events_reject = mne.make_fixed_length_events(raw, id=1, duration=5., overlap=0.)
+events_reject = mne.make_fixed_length_events(raw, id=1, duration=10., overlap= 2.)
 
-epochs_reject = Epochs(raw, events_reject, tmin=0., tmax=5., baseline=None)
+
+epochs_reject = Epochs(raw, events_reject, tmin=0., tmax=10., baseline=None)
 #eda_epochs = Epochs(raw=raw_eda, events=events, tmin=0., tmax=0., baseline=None)
 
 # Autoreject 
-reject = get_rejection_threshold(epochs_reject, decim=4)
+reject = get_rejection_threshold(epochs_reject, decim=1)
 
 #reject.update({'misc': '3.'}) # 3 times typical phasic incrase in conductance (Boucsein, 2012)
 
-# events = events_reject
-events = mne.make_fixed_length_events(raw, id=1, duration=10.0, overlap=2.0)
-# epochs = epochs_reject
-epochs = Epochs(raw=raw, events=events, tmin=0., tmax=10., baseline=None)
+events = events_reject
+#events = mne.make_fixed_length_events(raw, id=1, duration=10.0, overlap= 2.0)
+epochs = epochs_reject
+#pochs = Epochs(raw=raw, events=events, tmin=0., tmax=10., baseline=None)
 
 # Reject bad epochs
-epochs.drop_bad(reject={k: v for k, v in reject.items() if k != "misc"})
+epochs.drop_bad(reject=reject)
 
 #%%
 # Prepare classification
 X = epochs.get_data(picks=picks_eeg)
-#y = eda_epochs.get_data().var(axis=2)[:, 0]  # target is EDA power
-y = epochs.get_data(picks=picks_eda).mean(axis=2)[:, 0]
+#y = epochs.get_data().var(axis=2)[:, 0]  # target is EDA power
+y = epochs.get_data(picks=picks_eda).mean(axis=2)
+y = y.flatten()
 
+#%%
 # Classification pipeline with SPoC spatial filtering and Ridge Regression
-spoc = SPoC(n_components=15, log=True, reg='oas')
+spoc = SPoC(n_components=2, log=True, reg='oas', rank='full')
 clf = make_pipeline(spoc, Ridge())
 # Define a two fold cross-validation
 cv = KFold(n_splits=2, shuffle=False)
 
-#%%
 # Run cross validaton
 y_preds = cross_val_predict(clf, X, y, cv=cv)
 
+#%%
 # Plot the True EDA power and the EDA predicted from EEG data
 fig, ax = plt.subplots(1, 1, figsize=[10, 4])
 times = raw.times[epochs.events[:, 0] - raw.first_samp]
 ax.plot(times, y_preds, color='b', label='Predicted EDA')
 ax.plot(times, y, color='r', label='True EDA')
 ax.set_xlabel('Time (s)')
-ax.set_ylabel('EDA average')
+ax.set_ylabel('EDA Mean')
 ax.set_title('SPoC EEG Predictions')
 plt.legend()
 mne.viz.tight_layout()
 plt.show()
-
 
 # %%

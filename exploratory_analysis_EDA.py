@@ -5,7 +5,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from subject_number import subject_number
-from my_functions import extract_signal
+from preprocessing import extract_signal
 
 number_subject = '01'
 
@@ -57,11 +57,11 @@ else:
 #####  Continue working with DataFrames ######
 
 # Create dataframe of EDA subject 1 (filtered)
-df_s1_EDA = raw_filtered.to_data_frame()
+df_s1_EDA = raw.to_data_frame()
 
 
 # Transform EDA (participant 23-32 in Geneva) --> GSR geneva = 10**9 / GSR twente
-if int(i) < 23:
+if int(number_subject) < 23:
     df_s1_EDA["EDA"] = (df_s1_EDA["EDA"])/10**9
 else:
     df_s1_EDA["EDA"] = (10**9/df_s1_EDA["EDA"])*1000  
@@ -75,9 +75,11 @@ df_s1_EDA['time_sec'] = df_s1_EDA.time/1000
 t = df_s1_EDA['time_min']
 x_detrended = df_s1_EDA['EDA']
 
-plt.plot(t, x_detrended, label="S {}".format(i), linewidth=1)
+plt.plot(t, x_detrended, label="S {}".format(number_subject), linewidth=1)
 
 plt.xlabel("Time(min)")
 plt.ylabel("Skin conductance(µS)")
 plt.legend(loc='best')
 plt.show()
+
+# %%

@@ -16,7 +16,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import KFold, cross_val_predict, cross_val_score, check_cv
 
-from my_functions import extract_signal, transform_negative_to_zero, out_of_range, get_rejection_threshold
+from preprocessing import extract_signal, transform_negative_to_zero, out_of_range, get_rejection_threshold
 from channel_names import channels_geneva, channels_twente 
 
 from subject_number import subject_number

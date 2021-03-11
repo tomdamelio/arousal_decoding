@@ -18,7 +18,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import KFold, cross_val_predict
 
-from my_functions import extract_signal
+from preprocessing import extract_signal
 from channel_names import channels_geneva, channels_twente 
 
 # Define parameters
@@ -111,8 +111,8 @@ raw_epochs = Epochs(raw=raw, events=events, tmin=0., tmax=0., baseline=None)
 
 # Prepare classification
 X = raw_epochs.get_data(picks=picks_eeg)
-#y = eda_epochs.get_data().var(axis=2)[:, 0]  # target is EDA power
-y = raw_epochs.get_data(picks=picks_eda)
+y = raw_epochs.get_data().var(axis=2)[:, 0]  # target is EDA power
+#y = raw_epochs.get_data(picks=picks_eda)
 
 # Classification pipeline with SPoC spatial filtering and Ridge Regression
 spoc = SPoC(n_components=2, log=True, reg='oas', rank='full')
@@ -136,3 +136,5 @@ ax.set_title('SPoC EEG Predictions')
 plt.legend()
 mne.viz.tight_layout()
 plt.show()
+
+# %%

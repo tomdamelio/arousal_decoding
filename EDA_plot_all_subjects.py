@@ -5,7 +5,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from subject_number import subject_number
-from my_functions import extract_signal
+from preprocessing import extract_signal
 
 subset_1_subjects = subject_number[0:10]
 subset_2_subjects = subject_number[10:20]
@@ -14,15 +14,17 @@ subset_3_subjects = subject_number[20:27]
 for i in subset_1_subjects:
 #i = '01'
 # Extract signal
-    subject_n_temp = extract_signal(signal = 'EDA', number_subject = i)
+    raw = extract_signal(directory = 'data', number_subject=i,
+                     extension = '.bdf')
 
     # Filter signal
-    s1_filtered = subject_n_temp.filter(0.05, 5., fir_design='firwin')
-
+    #raw = raw.filter(0.05, 5., fir_design='firwin')
+    
+    #raw = mne.pick_channels(ch_names = raw.ch_names ,include=['EDA'])
     ### CONTINUE PIPELINE WITH DATAFRAMES (PANDAS) ###
     
     # Create dataframe of EDA subject 1 (filtered)
-    df_s1_EDA = s1_filtered.to_data_frame()
+    df_s1_EDA = raw.to_data_frame()[40] # EDA channel
 
     # Select first part of the signal
     df_s1_EDA = df_s1_EDA.head(20000)
