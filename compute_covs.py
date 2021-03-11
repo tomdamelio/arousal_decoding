@@ -13,7 +13,6 @@ from autoreject import get_rejection_threshold
 import config as cfg
 import library.preprocessing_david as pp
 
-#%%
 def rawfile_of(subject):
     'return list of rawfile' #(?) return path of rawfile of a particular subject
     rawfiles = [f for f in bdfs if subject in f]
@@ -88,7 +87,7 @@ def _run_all(subject):
     out = dict(error=error)
     out.update(result)
     return out
-#%%
+
 # edf files are stored in root_dir/
 # edf/{eval|train}/normal/01_tcp_ar/103/00010307/s001_2013_05_29/00010307_s001_t000.edf'
 # '01_tcp_ar': the only type of channel configuration used in this corpus
@@ -112,15 +111,17 @@ for sub in subjects[1:]:
     chs = set(raw.info['ch_names'])
     common_chs = common_chs.intersection(chs)
     
-common_chs -= {'EXG5', 'EXG6', 'EXG7', 'EXG8'
-               'GSR2', 'Erg1', 'Erg2', 'Resp'
-               'Plet', 'Temp'}
+common_chs -= {'EXG1', 'EXG2', 'EXG3', 'EXG4',
+               'EXG5', 'EXG6', 'EXG7', 'EXG8',
+               'GSR2', 'Erg1', 'Erg2', 'Resp',
+               'Plet', 'Temp', 'GSR1', 'Status'}
+
+subject_1 = ['s01.bdf']
 
 out = Parallel(n_jobs=1)(
     delayed(_run_all)(subject=subject)
-    for subject in subjects)
+    for subject in subject_1)
 
-#%%
 fname_covs = op.join('data', 'covs_s01.h5')
 mne.externals.h5io.write_hdf5(fname_covs, out, overwrite=True)
 
@@ -131,3 +132,4 @@ mne.externals.h5io.write_hdf5(fname_covs, out, overwrite=True)
 #  plt.title('Age histogram of TUH Abnormal dataset')
 #  plt.xlabel('Age')
 #  plt.savefig(op.join(cfg.path_outputs, 'fig_tuh_hist_age.png'), dpi=300)
+# %%
