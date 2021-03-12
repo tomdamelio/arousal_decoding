@@ -1,3 +1,4 @@
+#%%
 import os.path as op
 
 import numpy as np
@@ -99,10 +100,11 @@ n_sub, n_fb, n_ch, _ = X.shape
 #%%
 ##############################################################################
 
-#ridge_shrinkage = np.logspace(-3, 5, 100)
-#spoc_shrinkage = np.linspace(0, 1, 5)
-#common_shrinkage = np.logspace(-7, -3, 5)
+ridge_shrinkage = np.logspace(-3, 5, 100)
+spoc_shrinkage = np.linspace(0, 1, 5)
+common_shrinkage = np.logspace(-7, -3, 5)
 
+#%%
 #riemann_model = make_pipeline(    
 #    ProjCommonSpace(scale=scale, n_compo=n_compo,
 #                    reg=1.e-05),
@@ -112,8 +114,9 @@ n_sub, n_fb, n_ch, _ = X.shape
 
 #cv = KFold(n_splits=2, shuffle=False)
 
+#%%
 # Run cross validaton
-#y_preds = cross_val_predict(riemann_model, X, y, cv=cv)
+#y_preds = cross_val_predict(riemann_model, X, y, cv=2, n_jobs=3)
 
 #%%
 # Plot the True EDA power and the EDA predicted from EEG data
@@ -208,19 +211,32 @@ best_components = {
 }
 
 #%%
-pipelines[f"spoc_{best_components['spoc']}"] = make_pipeline(
-    ProjSPoCSpace(n_compo=best_components['spoc'],
-                  scale=scale, reg=0, shrink=0.5),
-    LogDiag(),
-    StandardScaler(),
-    RidgeCV(alphas=ridge_shrinkage))
+#pipelines[f"spoc_{best_components['spoc']}"] = make_pipeline(
+#    ProjSPoCSpace(n_compo=best_components['spoc'],
+#                  scale=scale, reg=0, shrink=0.5),
+#    LogDiag(),
+#    StandardScaler(),
+#    RidgeCV(alphas=ridge_shrinkage))
 
-pipelines[f"riemann_{best_components['riemann']}"] = make_pipeline(
+#pipelines[f"riemann_{best_components['riemann']}"] = make_pipeline(
+#    ProjCommonSpace(scale=scale, n_compo=best_components['riemann'],
+#                    reg=1.e-05),
+#    Riemann(n_fb=n_fb, metric=metric),
+#    StandardScaler(),
+#    RidgeCV(alphas=ridge_shrinkage))
+
+riemann_model = make_pipeline(
     ProjCommonSpace(scale=scale, n_compo=best_components['riemann'],
                     reg=1.e-05),
     Riemann(n_fb=n_fb, metric=metric),
     StandardScaler(),
     RidgeCV(alphas=ridge_shrinkage))
+
+cv = KFold(n_splits=2, shuffle=False)
+
+# Run cross validaton
+y_preds = cross_val_predict(riemann_model, X, y, cv=cv)
+
 
 #%%
 
