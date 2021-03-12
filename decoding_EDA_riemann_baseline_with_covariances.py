@@ -92,7 +92,7 @@ raw.apply_function(fun=transform_negative_to_zero, picks=picks_eda)
 # FIlter EEG
 raw.filter(8., 13., fir_design='firwin', picks=picks_eeg)
 # Downsample to 250 Hz 
-#raw.resample(250.) 
+#   raw.resample(250.) 
 
 # Build epochs as sliding windows over the continuous raw file
 events_reject = mne.make_fixed_length_events(raw, id=1, duration=5., overlap=0.)
