@@ -5,14 +5,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from sklearn.dummy import DummyRegressor
-from sklearn.pipeline import make_pipeline
-from sklearn.linear_model import RidgeCV
+from sklearn.pipeline import make_pipeline, Pipeline
+from sklearn.linear_model import RidgeCV, GammaRegressor, BayesianRidge, TweedieRegressor, SGDRegressor
+from sklearn.svm import SVR
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import cross_val_score, GroupShuffleSplit, KFold, cross_val_predict
-
-# from sklearn.model_selection import cross_val_score, KFold, GroupShuffleSplit
-# from sklearn.model_selection import GridSearchCV
-# from sklearn.base import clone
+from sklearn.model_selection import cross_val_score, GroupShuffleSplit, KFold, cross_val_predict, GridSearchCV, RandomizedSearchCV
+from sklearn.ensemble import RandomForestRegressor
 import mne
 import pandas as pd
 
@@ -27,6 +25,7 @@ import library.preprocessing_david as pp
 
 from joblib import Parallel, delayed
 
+#%%
 ##############################################################################
 n_compo = 151
 scale = 'auto'
@@ -34,50 +33,36 @@ metric = 'riemann'
 seed = 42
 n_splits = 10
 n_jobs = 20
-
 ##############################################################################
 
-# Define parameters
 fname = op.join('data', 's17.bdf')
-# may need mkdir ~/mne_data
-# import locale; locale.setlocale(locale.LC_ALL, "en_US.utf8")
 
 raw = mne.io.read_raw_bdf(fname)
 #raw.crop(450., 650.).load_data()  # crop for memory purposes
-raw.load_data()  # crop for memory purposes
-# (0-400s=lft=> crop 50-250, 400-800=rgt => crop 450-650)
+raw.load_data()
 
-# Filter muscular activity to only keep high frequencies
-#emg = raw.copy().pick_channels(['EMGrgt'])
+# Separate EDA data
 eda = raw.copy().pick_channels(['GSR1'])
 
 #%%
-eda.filter(None, 5, fir_design='firwin')
+# EDA Band-pass filter
+eda.filter(0.001, 5, fir_design='firwin') # Filter very low freqs
 
 # Common channels
 common_chs = set(raw.info['ch_names'])
+# Discard non-relevant channels
 common_chs -= {'EXG1', 'EXG2', 'EXG3', 'EXG4',
                'EXG5', 'EXG6', 'EXG7', 'EXG8',
                'GSR2', 'Erg1', 'Erg2', 'Resp',
                'Plet', 'Temp', 'GSR1', 'Status'}
 
 #%%
-# Filter EEG data to focus on beta band, no ref channels (!)
+# EDA Band-pass filter
 raw.pick_channels(list(common_chs))
 raw.filter(None, 120., fir_design='firwin')
 
-# Build epochs as sliding windows over the continuous raw file
-events = mne.make_fixed_length_events(raw, id=3000, duration=pp.duration, overlap=2.0)
-
-#eeg_epochs = Epochs(raw, events,  event_id=3000, tmin=0, tmax=pp.duration, proj=True,
-#        baseline=None, preload=True, decim=1)
-eda_epochs = Epochs(eda, events,  event_id=3000, tmin=0, tmax=pp.duration, proj=True,
-        baseline=None, preload=True, decim=1)
-
 #%%
-y = eda_epochs.get_data().var(axis=2)[:, 0]  # target is EDA power
-#%%
-# Prepare data
+# BUild cov matrices
 X = []
 for fb in pp.fbands:
     rf = raw.copy().load_data().filter(fb[0], fb[1])
@@ -106,27 +91,11 @@ n_sub, n_fb, n_ch, _ = X.shape
 
 #%%
 ##############################################################################
-
 ridge_shrinkage = np.logspace(-3, 5, 100)
 spoc_shrinkage = np.linspace(0, 1, 5)
 common_shrinkage = np.logspace(-7, -3, 5)
+##############################################################################
 
-#%%
-#riemann_model = make_pipeline(    
-#    ProjCommonSpace(scale=scale, n_compo=n_compo,
-#                    reg=1.e-05),
-#    Riemann(n_fb=n_fb, metric=metric), #n_fb=n_fb 
-#    StandardScaler(),
-#    RidgeCV(alphas=ridge_shrinkage))
-
-#cv = KFold(n_splits=2, shuffle=False)
-
-#%%
-# Run cross validaton
-#y_preds = cross_val_predict(riemann_model, X, y, cv=2, n_jobs=3)
-
-
-#%%
 pipelines = {
     'dummy':  make_pipeline(
         ProjIdentitySpace(), LogDiag(), StandardScaler(), DummyRegressor()),
@@ -147,7 +116,13 @@ pipelines = {
             ProjCommonSpace(scale=scale, n_compo=n_compo, reg=1.e-05),
             Riemann(n_fb=n_fb, metric=metric),
             StandardScaler(),
-            RidgeCV(alphas=ridge_shrinkage))
+            RidgeCV(alphas=ridge_shrinkage)),
+#    'riemann': #GammaRegressor
+#        make_pipeline(
+#            ProjCommonSpace(scale=scale, n_compo=n_compo, reg=1.e-05),
+#            Riemann(n_fb=n_fb, metric=metric),
+#            StandardScaler(),
+#            GammaRegressor())
 }
 
 #%%
@@ -159,16 +134,17 @@ for val, inds in enumerate(splits):
     groups[inds] = val
 
 #%%
-# Shift EDA signal 2 seconds.
+# Shift EDA signal 1.5 seconds.
+# EDA Band-pass filter
+eda.filter(0.01, 5, fir_design='firwin') # Filter very low freqs
+
 events_shift = mne.make_fixed_length_events(raw, id=3000, start=1.5, duration=pp.duration, overlap=2.0)
 
 eda_epochs_shift = Epochs(eda, events_shift,  event_id=3000, tmin=0, tmax=pp.duration, proj=True,
         baseline=None, preload=True, decim=1)
-y = eda_epochs_shift.get_data().mean(axis=2)[:, 0]  # target is EDA power
+y = eda_epochs_shift.get_data().var(axis=2)[:, 0]  # target is EDA mean
 
 #%%
-#y = eda_epochs.get_data().var(axis=2)[:, 0]  # target is EDA var 
-#y = eda_epochs.get_data().mean(axis=2)[:, 0]  # target is EDA mean 
 def run_low_rank(n_components, X, y, cv, estimators, scoring, groups):
     out = dict(n_components=n_components)
     for name, est in estimators.items():
@@ -204,7 +180,7 @@ for this_dict in out_list:
     this_df['fold_idx'] = np.arange(len(this_df))
     out_frames.append(this_df)
 out_df = pd.concat(out_frames)
-#%%
+
 out_df.to_csv("./DEAP_component_scores.csv")
 
 mean_df = out_df.groupby('n_components').mean().reset_index()
@@ -230,16 +206,50 @@ best_components = {
 #    StandardScaler(),
 #    RidgeCV(alphas=ridge_shrinkage))
 
+
+############################################
+
 riemann_model = make_pipeline(
     ProjCommonSpace(scale=scale, n_compo=best_components['riemann'],
                     reg=1.e-05),
     Riemann(n_fb=n_fb, metric=metric),
-    StandardScaler(),
-    RidgeCV(alphas=ridge_shrinkage))
+   StandardScaler(),
+#   RidgeCV(alphas=ridge_shrinkage))
+#   GammaRegressor())
+#   BayesianRidge())
+#   TweedieRegressor())
+#   SVR(kernel='poly', C=100, gamma='auto', degree=3, epsilon=.1,
+#              coef0=1))
+#  SGDRegressor())
+    RandomForestRegressor())
 
-cv = KFold(n_splits=2, shuffle=False)
+#riemann_model = Pipeline([
+#    ('proj', ProjCommonSpace(scale=scale, n_compo=best_components['riemann'],
+#                    reg=1.e-05)),
+#    ('riemann', Riemann(n_fb=n_fb, metric=metric)),
+#    ('scl', StandardScaler()),
+#    ('rdg', RidgeCV(alphas=np.logspace(-3, 5, 100), store_cv_values = True))])
+
+#param_grid  = [{'rdg__alphas': np.logspace(-3, 5, 100)}] --> # alphas = 0.004
+#rgs = RandomizedSearchCV(riemann_model, param_grid , n_jobs=-1) 
+#rgs.fit(X, y)
+
+
+#param_grid  = [{'rdg__alphas': np.logspace(-3, 5, 100),
+#                }]
+
+#rgs = RandomizedSearchCV(riemann_model, param_grid , n_jobs=-1)
+#rgs.fit(X, y)
+#print(rgs.best_params_)
+
+
+# To know alpha (shrinkage) value
+#riemann_model.fit(X, y)
+#riemann_model.named_steps['rdg'].alpha_
 
 # Run cross validaton
+cv = KFold(n_splits=2, shuffle=False)
+
 y_preds = cross_val_predict(riemann_model, X, y, cv=cv)
 
 #%%
@@ -256,10 +266,9 @@ ax.set_xlabel('Time (s)')
 ax.set_ylabel('EDA mean')
 ax.set_title('Riemann EDA Predictions')
 plt.legend()
-#plt.xlim(0,1000)
+#plt.xlim(0,300)
 mne.viz.tight_layout()
 plt.show()
-
 
 #%%
 
@@ -279,7 +288,5 @@ for scoring in ("r2", "neg_mean_absolute_error"):
     np.save(op.join('data',
                     f'all_scores_models_fieldtrip_spoc_{score_name}.npy'),
             all_scores)
-
-
 
 # %%
