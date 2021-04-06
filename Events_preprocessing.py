@@ -36,34 +36,86 @@ from channel_names import channels_geneva, channels_twente
 import os.path as op
 
 #%%
-
-directory = 'outputs/data/'
+# Read .fif files (with respiration annotations)
+directory = 'outputs/data/clean_EDA/'
 number_subject = '01'
 events_label = '_without_ITI'
 extension = '.fif'
 fname = op.join(directory + 's'+ number_subject + extension)
 
-#%%
-# Extract signal
 raw_fif = mne.io.read_raw_fif(fname, preload=True) 
-#raw_fif.plot(order=[1,0], scalings=dict(misc='1e-1', emg='1e-1'))
 
-#%%
+# Plot EDA and resp with annotations
+# raw_fif.plot(order=[1,0], scalings=dict(misc='1e-1', emg='1e-1'))
+# %matplotlib
+
+
+# Read bdf files (without annotations)
 extension = '.bdf'
 directory = 'data/'
 #Read bdf
 fname_bdf = op.join(directory + 's'+ number_subject + extension)
 raw_bdf = mne.io.read_raw_bdf(fname_bdf, preload=True) 
 
-#raw_bdf.pick_channels(['EDA', 'Status'])
-# Add annotation to complete bdf file
-# No agregaga annotations a raw_bdf. Intentar en cambio sumar todos los canales al fif.
-#raw_bdf.annotations.__add__(raw_fif.annotations)
+mne.rename_channels(info= raw_bdf.info , mapping={'GSR1':'EDA'})
 
-raw_fif = raw_fif.add_channels()
+raw_bdf.set_channel_types({ 'EXG1': 'eog',
+                            'EXG2': 'eog',
+                            'EXG3': 'eog',
+                            'EXG4': 'eog',
+                            'EXG5': 'emg',
+                            'EXG6': 'emg',
+                            'EXG7': 'emg',
+                            'EXG8': 'emg',
+                            'EDA' : 'misc',
+                            'GSR2': 'misc',
+                            'Erg1': 'misc',
+                            'Erg2': 'misc',
+                            'Resp': 'misc',
+                            'Plet': 'misc',
+                            'Temp': 'misc'})
 
-%matplotlib
+# Pick STIM, EEG and EOG from .bdf
+raw_bdf2 = raw_bdf.pick_types(stim = True, eeg = True, eog = True,
+                              misc = False, emg = False)
 
+# Add channels from raw_bdf (stim, EEG and EOG) to raw_fif (resp and EDA)
+raw_fif.add_channels([raw_bdf2])
+
+#%%
+# Save .fif file
+extension = '.fif'
+directory = 'outputs/data/EDA+EEG'
+fname_2 = op.join(directory,'s'+ number_subject + extension)
+raw_fif.save(fname = fname_2, overwrite=True)
+
+#%%
+# Create events based on stim channel
+events = mne.find_events(raw_fif, stim_channel='Status')
+
+# Select events with stim value == 4 --> start music stimulus
+rows=np.where(events[:,2]==4)
+events_4 = events[rows]
+
+#%%
+#
+mapping = {4: 'music_stim'}
+annot_from_events = mne.annotations_from_events(
+    events=events_4, event_desc=mapping, sfreq=raw_fif.info['sfreq'],
+    orig_time=raw_fif.info['meas_date'])
+raw_fif.set_annotations(annot_from_events)
+
+# Epoche considering this epochs, from -5 secs (fix) to 63 sec (stim + postfix)
+#epochs = Epochs(raw=raw_fif, events=events_4, tmin=-5., tmax=63., baseline=None)
+
+
+
+
+
+
+
+
+######################
 #%%
 events_from_annot, event_dict = mne.events_from_annotations(raw_bdf)
 print(event_dict)
