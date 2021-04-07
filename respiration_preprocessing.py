@@ -24,8 +24,8 @@ import os.path as op
 
 #%%
 # Define subject
-number_subject = '01'
-directory = 'data'
+number_subject = '32'
+directory = 'outputs/data'
 extension = '.bdf'
 #Extract signal
 fname = op.join(directory, 's'+ number_subject + extension)
@@ -57,22 +57,38 @@ picks_eda = mne.pick_channels(ch_names = raw.ch_names ,include=['EDA'])
 if int(number_subject) < 23:
     raw.apply_function(fun=lambda x: x/1000, picks=picks_eda)
 else:
-    raw.apply_function(fun=lambda x: (10**9/x)/1000, picks=picks_eda)
+    raw.apply_function(fun=lambda x: (10**9/(x*1000)), picks=picks_eda)
 
 %matplotlib
 
 #%%
 # Preprocessing EDA
 # Filter EDA
-raw.filter(0.1, 5., fir_design='firwin', picks=picks_eda)
+raw.filter(None, 5., fir_design='firwin', picks=picks_eda)
 
 # Preprocessing Respiration
 picks_resp = mne.pick_channels(ch_names = raw.ch_names ,include=['Resp'])
-# Filter EDA
-#raw.filter(None, 5., fir_design='firwin', picks=picks_resp)
+# Filter resp
+raw.filter(None, 5., fir_design='firwin', picks=picks_resp)
+
+#%%
+eda_idx = raw.ch_names.index('EDA')
+x = raw.get_data()[eda_idx]
+plt.plot(x)
 
 #%%
 raw.pick_channels(['EDA', 'Resp'])
-raw.plot(order=[1,0], scalings=dict(misc='auto', emg='auto'))
+raw.plot(color = dict(emg='m', misc='k'), order=[1,0],
+         scalings=dict(misc='1e-1', emg='auto'))
 
+#%%
+extension = '.fif'
+fname = op.join('s'+ number_subject + extension)
+raw.save(fname = fname, overwrite=True)
+
+#%%
+# Extract signal
+
+raw_2 = mne.io.read_raw_fif(fname, preload=True) 
+raw_2.plot(order=[1,0], scalings=dict(misc='1e-1', emg='1e-1'))
 # %%
