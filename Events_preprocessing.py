@@ -36,20 +36,19 @@ from channel_names import channels_geneva, channels_twente
 import os.path as op
 from subject_number import subject_number
 
-subject_number = ['05']
+subject_number = ['22']
 
 for i in subject_number: 
     # Read .fif files (with respiration annotations)
     directory = 'outputs/data/EDA+Resp_with_resp_annotations/'
     number_subject = i
-    events_label = '_without_ITI'
     extension = '.fif'
     fname = op.join(directory + 's'+ number_subject + extension)
 
     raw_fif = mne.io.read_raw_fif(fname, preload=True) 
 
 
-    # Read bdf files (without annotations)
+    # Read bdf files (without annotations) --> all channels
     extension = '.bdf'
     directory = 'data/'
     #Read bdf
@@ -74,6 +73,7 @@ for i in subject_number:
                                 'Plet': 'misc',
                                 'Temp': 'misc'})
 
+
     # Pick STIM, EEG and EOG from .bdf
     raw_bdf2 = raw_bdf.pick_types(stim = True, eeg = True, eog = True,
                                 misc = False, emg = False)
@@ -85,112 +85,91 @@ for i in subject_number:
     extension = '.fif'
     directory = 'outputs/data/EDA+EEG+bad_resp/'
     fname_2 = op.join(directory,'s'+ number_subject + extension)
-
+        
     #%matplotlib
     #raw_fif.plot(order=[1,0], scalings=dict(misc='1e-1', emg='1e-1'))
     #raw_fif.plot()
-    #print(raw_fif.ch_names)
 
-
-    # DESCOMENTAR ESTO SI QUIERO VOLVER A GUARDAR TODO 
+    # Decomment in case in want to resave EDA + EEG + bad_resp annotations
     # raw_fif.save(fname = fname_2, overwrite=True)
 
-
+    if int(i) > 28:
+        raw_fif.rename_channels(mapping={'-1': 'Status'} )
+        raw_fif.drop_channels('-0')
+    
+    elif int(i) > 23:
+        raw_fif.rename_channels(mapping={'': 'Status'} )
+    
     # Create events based on stim channel
     events = mne.find_events(raw_fif, stim_channel='Status')
 
     # Select events with stim value == 4 --> start music stimulus
-    rows=np.where(events[:,2]==4)
-    events_4 = events[rows]
-
-    mapping = { 1: 'rating_screen',
-                2: 'video_synch',
-                3: 'fixation_screen ',
-                4: 'music_stim',
-                5: 'fixation_screen_after',
-                7: 'end_exp'}
-
+    #rows=np.where(events[:,2]==4)
+    #events_4 = events[rows]
+    
+    if int(i) < 24:
+        mapping = { 1: 'rating_screen',
+                    2: 'video_synch',
+                    3: 'fixation_screen ',
+                    4: 'music_stim',
+                    5: 'fixation_screen_after',
+                    7: 'end_exp'}
+    else:
+        mapping = { 1638145: 'rating_screen',
+                    1638149: 'fixation_screen_after ',
+                    1638147: 'fixation_screen',
+                    1638148: 'music_stim',
+                    1638146: 'video_synch',
+                    1638151: 'end_exp',
+                    }
 
     annot_from_events = mne.annotations_from_events(
         events=events, event_desc=mapping, sfreq=raw_fif.info['sfreq'],
         orig_time=raw_fif.info['meas_date'])
     raw_fif.set_annotations(annot_from_events)
     
-    #%matplotlib
-    #raw_fif.plot()
+    %matplotlib
+    raw_fif.plot()
 
-
-    # Crear una lista con los valores de la primera columna del ndarray
-    # dividos por la freq. de sampleo -->  raw_fif.info['sfreq']
-    # Cambiar el parametro de 'onset' por 5 segundos antes
-    # Esto devuelve una lista con los valores en segundos de los stim=4
-
-    #list_onset_stim = ((events_4[:,0]/raw_fif.info['sfreq'])-5).tolist()
-
-
-    # Crear las annotations que correspondan con la presentacion
-    # de estimulos musicales (40 stimuli)
-    # Cambiar el parametro de 'onset' por 5 segundos antes y 3 despues de los
-    # 40 segundos que dura los estimulos.
-
-    #rem_annot = mne.Annotations(onset= list_onset_stim,
-    #                            duration=[68.],
-    #                            description=['STIM'] * 40)
-    #raw_fif.set_annotations(rem_annot)
-
-
-    # Save output fif file
-    directory = 'outputs/data/EDA+EEG'
-    fname2 = op.join(directory + 's'+ number_subject + events_label + extension)
-    #raw_2 = mne.io.read_raw_fif(fname2, preload=True) 
-
-    #%matplotlib
-    #raw_2.plot()
-
-
-    #events_label = '_without_ITI_prueba'
-    #fname3 = op.join(directory + 's'+ number_subject + events_label + extension)
-    #raw_fif.save(fname = fname3, overwrite=True)   
-
-    # Intentar anotar todas las bad_epochs de forma programatica
-    # Select events with stim value == 1 o 3 --> start music stimulus
-
-    rows_1 = np.where(events[:,2] == 1)
-    events_1 = events[rows_1]
-    onset_stim_1 = events_1[:,0]/raw_fif.info['sfreq'] 
+    ##### Programmatically annotate bad signal ####
+    # bad signal annotate as 'bad_no_stim':
+    # - Time before the first trial
+    # - Time between trials 
+    # - Time between blocks (only one bad_no_stim in each subject)
+    # - Time after the experimental task
     
-    # Elimino los los dos primeros valores del onset stim
-    # (que no tiene que ver con el autoreporte)
-    onset_stim_1 = onset_stim_1[2:]
+    # Select events with stim value == 5 [fix after] or 3 [fixation]
+    # Between this two events -->  music stimulus
+    
+    # Select events of fixation screen after trial [5]
+    rows_rating = np.where(events[:,2] == 5)
+    events_rating = events[rows_rating]
+    onset_music_stim = events_rating[:,0]/raw_fif.info['sfreq'] 
+    
+    # Delete first two values from onset_stim_rating
+    # (has nothing to do with rating)
+    #onset_stim_rating = onset_stim_rating[2:]
 
-    row_stim_1 = np.arange(0, len(onset_stim_1),4)
-    onset_stim_1_unique = onset_stim_1[row_stim_1]
+    # As we have 4 rating screens per music stimulus, we will select 1
+    # value per every 4 rating screen values
+    #row_music_stim = np.arange(0, len(onset_stim_rating),4)
 
-    rows_3 = np.where(events[:,2] == 3)
-    events_3 = events[rows_3]
-    onset_stim_3 = events_3[:,0]/raw_fif.info['sfreq']
-    onset_stim_3 = onset_stim_3[1:]
-    onset_stim_3 = np.append(onset_stim_3, (len(raw_fif)/raw_fif.info['sfreq']))
+    # Select events of fixation screen before beginning of trial [3]
+    rows_fix_before = np.where(events[:,2] == 3)
+    events_fix_before = events[rows_fix_before]
+    onset_stim_fix_before = events_fix_before[:,0]/raw_fif.info['sfreq']
+    onset_stim_fix_before_2 = onset_stim_fix_before[1:]
+    onset_stim_fix_before_2 = np.append(onset_stim_fix_before_2, (len(raw_fif)/raw_fif.info['sfreq']))
 
-    diff_onset_stim_1_3 = onset_stim_3 - onset_stim_1_unique
+    diff_onset_music_stim = onset_stim_fix_before_2 - onset_music_stim
 
-
-    # Marcar tiempo pre-baseline
-    # entre timpo 0 y rating screen (1)
-    events_1_first = events[rows_1]
-    onset_stim_1_first = events_1_first[:,0]/raw_fif.info['sfreq']
-    # Elimino los los dos primeros valores del onset stim
-    # (que no tiene que ver con el autoreporte)
-    #onset_stim_1_first = onset_stim_1_first[0]
-
-    diff_onset_stim_1_3 = np.append(onset_stim_1_first[0], diff_onset_stim_1_3)
-    onset_stim_1_unique = np.append(0, onset_stim_1_unique)
-
+    # Select events pre first music stimulus
+    diff_onset_music_stim = np.append(onset_stim_fix_before[0], diff_onset_music_stim)
+    onset_music_stim= np.append(0, onset_music_stim)
 
     # Agregar annotations por respiration
     #raw_2 = mne.io.read_raw_fif(fname, preload=True) 
     #raw_2.plot(order=[1,0], scalings=dict(misc='1e-1', emg='1e-1'))
-
 
 
     # Extraer onset (dividiendo por frecuencia)
@@ -202,12 +181,14 @@ for i in subject_number:
     # Correr set_annotations y plot
 
     # https://mne.tools/dev/auto_tutorials/raw/plot_30_annotate_raw.html
-    later_annot = mne.Annotations(onset=onset_stim_1_unique,
-                                duration=diff_onset_stim_1_3,
+    later_annot = mne.Annotations(onset=onset_music_stim,
+                                duration=diff_onset_music_stim,
                                 description=['bad_no_stim']*41)
-    # 39 estimulos, porque el ultimo coincide con la ultima parte del experimento
+
     raw2 = raw_fif.copy().set_annotations(later_annot)
     raw2.plot()
+
+#%%
 
     extension = '.fif'
     directory = 'outputs/data/EDA+EEG+bad_no_stim/'
