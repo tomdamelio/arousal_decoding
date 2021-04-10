@@ -36,7 +36,7 @@ from channel_names import channels_geneva, channels_twente
 import os.path as op
 from subject_number import subject_number
 
-subject_number = ['22']
+subject_number = ['28']
 
 for i in subject_number: 
     # Read .fif files (with respiration annotations)
@@ -122,6 +122,7 @@ for i in subject_number:
                     1638146: 'video_synch',
                     1638151: 'end_exp',
                     }
+        
 
     annot_from_events = mne.annotations_from_events(
         events=events, event_desc=mapping, sfreq=raw_fif.info['sfreq'],
@@ -142,9 +143,12 @@ for i in subject_number:
     # Between this two events -->  music stimulus
     
     # Select events of fixation screen after trial [5]
-    rows_rating = np.where(events[:,2] == 5)
-    events_rating = events[rows_rating]
-    onset_music_stim = events_rating[:,0]/raw_fif.info['sfreq'] 
+    if int(i) < 23:
+        rows_fix_after = np.where(events[:,2] == 5)
+    else:
+        rows_fix_after = np.where(events[:,2] == 1638149)    
+    events_fix_after= events[rows_fix_after]
+    onset_fix_after = events_fix_after[:,0]/raw_fif.info['sfreq'] 
     
     # Delete first two values from onset_stim_rating
     # (has nothing to do with rating)
@@ -155,17 +159,20 @@ for i in subject_number:
     #row_music_stim = np.arange(0, len(onset_stim_rating),4)
 
     # Select events of fixation screen before beginning of trial [3]
-    rows_fix_before = np.where(events[:,2] == 3)
+    if int(i) < 23:
+        rows_fix_before = np.where(events[:,2] == 3)
+    else:
+        rows_fix_before = np.where(events[:,2] == 1638147)
     events_fix_before = events[rows_fix_before]
     onset_stim_fix_before = events_fix_before[:,0]/raw_fif.info['sfreq']
     onset_stim_fix_before_2 = onset_stim_fix_before[1:]
     onset_stim_fix_before_2 = np.append(onset_stim_fix_before_2, (len(raw_fif)/raw_fif.info['sfreq']))
 
-    diff_onset_music_stim = onset_stim_fix_before_2 - onset_music_stim
+    diff_onset_music_stim = onset_stim_fix_before_2 - onset_fix_after
 
     # Select events pre first music stimulus
     diff_onset_music_stim = np.append(onset_stim_fix_before[0], diff_onset_music_stim)
-    onset_music_stim= np.append(0, onset_music_stim)
+    onset_music_stim= np.append(0, onset_fix_after)
 
     # Agregar annotations por respiration
     #raw_2 = mne.io.read_raw_fif(fname, preload=True) 
