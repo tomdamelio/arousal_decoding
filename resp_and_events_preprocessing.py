@@ -1,5 +1,3 @@
-
-#%%
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -21,6 +19,7 @@ from preprocessing import extract_signal, transform_negative_to_zero, out_of_ran
 from channel_names import channels_geneva, channels_twente 
 import os.path as op
 from subject_number import subject_number
+
 
 def save_bad_no_stim_annotations (subject_number  = subject_number,
                                   save_EDA_EEG_bad_resp    = False,
@@ -233,7 +232,5 @@ def save_bad_no_stim_annotations (subject_number  = subject_number,
             fname_4 = op.join(directory,'s'+ number_subject + extension)
             raw2.save(fname = fname_4, overwrite=True)
                         
-
-#%%
 save_bad_no_stim_annotations()
 
