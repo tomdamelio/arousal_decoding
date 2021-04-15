@@ -54,7 +54,7 @@ def global_run (number_subject      =   subject_number,
                 crop                =   True,
                 high_pass_filter    =   0.01,
                 shift_EDA           =   1.5,
-                tune_components     =   True,
+                tune_components     =   False,
                 target              =   'delta',
                 scores_prediction   =   False,
                 estimator           =   TweedieRegressor,
@@ -165,12 +165,33 @@ def global_run (number_subject      =   subject_number,
 
         # crop for memory purposes (use to test things)
         if crop == True:
-            raw = raw.crop(100., 500.)
+            raw = raw.crop(0., 500.)
         
         picks_eda = mne.pick_channels(ch_names = raw.ch_names ,include=['EDA'])
             
         eda = raw.copy().pick_channels(['EDA'])
         eda.filter(high_pass_filter, 5, fir_design='firwin', picks='EDA') 
+        
+        # Add EDA onset_music_stim 
+        duration_EDA = eda.annotations.duration + shift_EDA
+
+        # Define EDA annotations
+        later_annot_eda = mne.Annotations  (onset=eda.annotations.onset,
+                                            duration=duration_EDA,
+                                            description=eda.annotations.description)
+
+        eda.set_annotations(later_annot_eda)
+
+        onset_raw = eda.annotations.onset - shift_EDA
+        duration_raw = eda.annotations.duration + shift_EDA
+
+        # Define raw annotations
+        later_annot_raw = mne.Annotations  (onset=onset_raw,
+                                            duration=eda.annotations.duration,
+                                            description=eda.annotations.description)
+
+
+        raw.set_annotations(later_annot_raw) 
 
         # EEG Band-pass filter
         common_chs = set(raw.info['ch_names'])
@@ -304,9 +325,9 @@ def global_run (number_subject      =   subject_number,
             estimator())
         
         cv = KFold(n_splits=2, shuffle=False)
-
-        y_preds = cross_val_predict(riemann_model, X, y, cv=cv)
         
+        y_preds = cross_val_predict(riemann_model, X, y, cv=cv)
+           
         r2_riemann_model = cross_val_score(riemann_model, X, y, cv=cv,  groups=groups)
         print("mean of R2 cross validation Riemannian Model : ", np.mean(r2_riemann_model))
         
@@ -334,15 +355,14 @@ def global_run (number_subject      =   subject_number,
         
     return exp
 
-#%%
-        
+#%%      
 all_subjects ={}
 for i in ['01']:
-    experiment_results = global_run(number_subject=i, crop=True,
+    experiment_results = global_run(number_subject=i, crop = True,
                                     annotations_resp    =   True,
-                                    annotations_no_stim =   False,)
+                                    annotations_no_stim =   True )
     all_subjects[i] = [experiment_results]
-
+   
 
 #%%    
 alpha = list(np.logspace(-3, 5, 100))
