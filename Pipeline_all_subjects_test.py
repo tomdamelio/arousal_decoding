@@ -22,6 +22,9 @@ from library.featuring import Riemann, LogDiag, NaiveVec
 import library.preprocessing_david as pp
 from subject_number import subject_number
 
+from preprocessing import get_rejection_threshold
+
+
 #%%
 ###########################################################################
 n_compo = 32
@@ -48,11 +51,39 @@ def run_low_rank(n_components, X, y, cv, estimators, scoring, groups):
         out[name] = scores
     return out
 
+
+def _get_global_reject_ssp(raw, decim=5):
+    # generate epochs around EOG artifact events
+    eog_epochs = mne.preprocessing.create_eog_epochs(raw)
+    if len(eog_epochs) >= 5: #  (?) Why?
+        # Reject eog artifacts epochs with autoreject
+        reject_eog = get_rejection_threshold(eog_epochs, decim=decim)
+        del reject_eog['eog']
+    else:
+        reject_eog = None
+
+    return reject_eog
+
+
+def _compute_add_ssp_exg(raw):
+    reject_eog = _get_global_reject_ssp(raw)
+    if 'eog' in raw:
+        proj_eog, _ = mne.preprocessing.compute_proj_eog(
+            raw, average=True, reject=reject_eog, n_mag=0, n_grad=0, n_eeg=1)
+    else:
+        proj_eog = None
+    if proj_eog is not None:
+        raw.add_proj(proj_eog)
+
+#%%
 def global_run (number_subject      =   subject_number,
                 annotations_resp    =   True,
                 annotations_no_stim =   True,                
                 crop                =   True,
+                eog_rejection       =   True,
+                eeg_rejection       =   True,
                 high_pass_filter    =   0.01,
+                baseline            =   -0.2,
                 shift_EDA           =   1.5,
                 tune_components     =   False,
                 target              =   'delta',
@@ -72,9 +103,15 @@ def global_run (number_subject      =   subject_number,
                             Default = 'subject_number' --> all subjects
     :annotations_resp:      Boolean. Respirations annotations (bad_resp)
     :annotations_no_stim:   Boolean. No stimuli annotations (bad_no_stim)
-    :crop:                  Boolean. Work with crop data (between 100 and 500 secs)                  
+    :crop:                  Boolean. Work with crop data (between 0 and 500 secs)                  
+    :eog_rejection:         Boolean. EOG Correction with SSP.
+                            Default = True
+    :eeg_rejection:         Boolean. EEG autoreject.
+                            Default = True
     :high_pass_filter:      Float. High-pass filter (in Hz). No filter = None
-                            Default = 0.01               
+                            Default = 0.01        
+    :baseline:              Float.    Onset baseline when epoching (in seconds)
+                            Default = 0.2       
     :shift_EDA:             Float.    Length shift between EEG and EDA epochs (in seconds)
                             Default = 1.5
     :tune_components:       Boolean. Tune n_components (rank of cov matrices)
@@ -166,6 +203,20 @@ def global_run (number_subject      =   subject_number,
         # crop for memory purposes (use to test things)
         if crop == True:
             raw = raw.crop(0., 500.)
+            
+        if eog_rejection == True:
+            _compute_add_ssp_exg(raw)
+            
+        if eeg_rejection == True:
+            events_reject = mne.make_fixed_length_events(raw, id=1, duration=5.,
+                                                         overlap=0.)
+
+            epochs_reject = mne.Epochs(raw, events_reject, tmin=0., tmax=5.,
+                                   baseline=None)
+            #eda_epochs = Epochs(raw=raw_eda, events=events, tmin=0., tmax=0., baseline=None)
+
+            # Autoreject 
+            reject = get_rejection_threshold(epochs_reject, decim=4)
         
         picks_eda = mne.pick_channels(ch_names = raw.ch_names ,include=['EDA'])
             
@@ -208,9 +259,9 @@ def global_run (number_subject      =   subject_number,
                                                 overlap=2.0)
             
             ec = mne.Epochs(rf, events,
-                            event_id=3000, tmin=0, tmax=pp.duration,
-                            proj=True, baseline=None, reject=None, preload=True, decim=1,
-                            picks=None)
+                            event_id=3000, tmin=baseline, tmax=pp.duration, proj=True,
+                            baseline=(baseline, 0), reject=reject, preload=True,
+                            decim=1, picks=None)
             
             X.append([mne.compute_covariance(
                                             ec[ii], method='oas')['data'][None]
@@ -359,7 +410,8 @@ def global_run (number_subject      =   subject_number,
 all_subjects ={}
 for i in ['01']:
     experiment_results = global_run(number_subject=i, crop = True,
-                                    annotations_resp    =   True,
+                                    eog_rejection = True         ,
+                                    annotations_resp    =   True ,
                                     annotations_no_stim =   True )
     all_subjects[i] = [experiment_results]
    
@@ -429,30 +481,32 @@ for paramset in param_values:
     
 #%%
 #################     TEST 1: NAME CHANNELS      ###################
-def openfiles_raw(annotations_resp = True, annotations_no_stim = True):
+def openfiles_raw(subject = '01',
+                  annotations_resp = True,
+                  annotations_no_stim = True):
     
     if annotations_resp == True and annotations_no_stim == True:
         directory = 'outputs/data/EDA+EEG+bad_no_stim+bad_resp/'
         extension = '.fif'
-        fname = op.join(directory, 's'+ '01' + extension)
+        fname = op.join(directory, 's'+ subject + extension)
         raw = mne.io.read_raw_fif(fname, preload=True)
         
     elif annotations_resp == True and annotations_no_stim == False:
         directory = 'outputs/data/EDA+EEG+bad_resp/'
         extension = '.fif'
-        fname = op.join(directory, 's'+ '01' + extension)
+        fname = op.join(directory, 's'+ subject + extension)
         raw = mne.io.read_raw_fif(fname, preload=True)
     
     elif annotations_resp == False and annotations_no_stim == True:
         directory = 'outputs/data/EDA+EEG+bad_no_stim/'
         extension = '.fif'
-        fname = op.join(directory, 's'+ '01' + extension)
+        fname = op.join(directory, 's'+ subject + extension)
         raw = mne.io.read_raw_fif(fname, preload=True)
     
     else:
         directory = 'data/'
         extension = '.bdf'
-        fname = op.join(directory, 's'+ '01' + extension)
+        fname = op.join(directory, 's'+ subject + extension)
         raw = mne.io.read_raw_bdf(fname, preload=True)
     
     return raw
@@ -470,7 +524,8 @@ raw = openfiles_raw(annotations_resp = False, annotations_no_stim = True)
 # EDA stim --> EDA
 # chs: 1 MISC, 1 EMG, 32 EEG, 4 EOG, 1 STIM
 #%%
-raw = openfiles_raw(annotations_resp = False, annotations_no_stim = False)
+raw = openfiles_raw(subject = '01',
+                    annotations_resp = False, annotations_no_stim = False)
 # EDA stim --> GSR1
 # chs: 47 EEG, 1 STIM
 raw.rename_channels(mapping={'GSR1':'EDA'})
@@ -482,4 +537,5 @@ raw.set_channel_types({ 'EXG1': 'eog',
                         'Erg1': 'misc',
                         'Erg2': 'misc',
                         'Resp': 'misc'})
+
 # %%
