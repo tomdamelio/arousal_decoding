@@ -287,6 +287,10 @@ def global_run (number_subject      =   subject_number,
             y = eda_epochs_shift.get_data().max(axis=2)[:, 0] - eda_epochs_shift.get_data().min(axis=2)[:, 0]
         else:
             y = eda_epochs_shift.get_data().var(axis=2)[:, 0]     
+        
+        return X, y
+#%%           
+            
             
         n_components = np.arange(1, 32, 1) # max components --> 32 --> 32 EEG channels
         # now let's do group shuffle split
@@ -415,6 +419,8 @@ for i in ['01']:
                                     annotations_no_stim =   True )
     all_subjects[i] = [experiment_results]
    
+    X = experiment_results[0]
+    y = experiment_results[1]
 
 #%%    
 alpha = list(np.logspace(-3, 5, 100))
