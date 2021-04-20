@@ -22,10 +22,8 @@ from library.featuring import Riemann, LogDiag, NaiveVec
 import library.preprocessing_david as pp
 from subject_number import subject_number
 
-###### AGREGO ESTO POR INCOMPATIBILIDAD CON LA OTRA FUNCION DE AUTOREJECT ######
-from preprocessing import get_rejection_threshold as get_rejection_threshold_2
+#from preprocessing import get_rejection_threshold as get_rejection_threshold
 from autoreject import get_rejection_threshold
-
 
 ############################################################################
 n_compo = 32
@@ -82,7 +80,7 @@ def global_run (number_subject      =   subject_number,
                 annotations_no_stim =   True,                
                 crop                =   True,
                 eog_rejection       =   True,
-                raw_rejection       =   True,
+                eeg_rejection       =   True,
                 high_pass_filter    =   0.01,
                 baseline            =   -0.2,
                 shift_EDA           =   1.5,
@@ -107,7 +105,7 @@ def global_run (number_subject      =   subject_number,
     :crop:                  Boolean. Work with crop data (between 0 and 500 secs)                  
     :eog_rejection:         Boolean. EOG Correction with SSP.
                             Default = True
-    :raw_rejection:         Boolean. raw autoreject.
+    :eeg_rejection:         Boolean. EEG autoreject.
                             Default = True
     :high_pass_filter:      Float. High-pass filter (in Hz). No filter = None
                             Default = 0.01        
@@ -150,7 +148,6 @@ def global_run (number_subject      =   subject_number,
             extension = '.fif'
             fname = op.join(directory, 's'+ i + extension)
             raw = mne.io.read_raw_fif(fname, preload=True)
-            ##### CAMBIE 'EDA --> misc' to 'Resp --> misc' ######
             raw.set_channel_types({ 'Resp': 'misc'})
 
         elif annotations_resp == True and annotations_no_stim == False:
@@ -210,8 +207,7 @@ def global_run (number_subject      =   subject_number,
         if eog_rejection == True:
             _compute_add_ssp_exg(raw)
             
-        ###### change eeg_rejection for raw_rejection #####    
-        if raw_rejection == True:
+        if eeg_rejection == True:
             events_reject = mne.make_fixed_length_events(raw, id=1, duration=5.,
                                                          overlap=0.)
 
@@ -220,77 +216,35 @@ def global_run (number_subject      =   subject_number,
             #eda_epochs = Epochs(raw=raw_eda, events=events, tmin=0., tmax=0., baseline=None)
 
             # Autoreject 
-            reject = get_rejection_threshold_2(epochs_reject, decim=4)
+            reject = get_rejection_threshold(epochs_reject, ch_types=['eeg'],decim=4)
         
         
-        ###### ESTO LO DESCARTO POR AHORA, ASI UTILIZO DESPUES LA FUNCION SHIFT_TIME ######
-        ### picks_eda = mne.pick_channels(ch_names = raw.ch_names ,include=['EDA'])           
-        ### eda = raw.copy().pick_channels(['EDA'])
-        
-        
-        
-        ###### PONGO 'RAW' EN VEZ DE 'EDA' #######
         raw.filter(high_pass_filter, 5, fir_design='firwin', picks='EDA') 
-        
-        
-        ###### LO QUE SIGUE AHORA DE EDA LO VOY A BORRAR: NO SERIA NECESARIO AL TENES SHIFT_EDA ######
-        # Add EDA onset_music_stim 
-        ### duration_EDA = eda.annotations.duration + shift_EDA
-        # Define EDA annotations
-        ### later_annot_eda = mne.Annotations  (onset=eda.annotations.onset,
-        ###                                    duration=duration_EDA,
-        ###                                    description=eda.annotations.description)
-        ### eda.set_annotations(later_annot_eda)
-        ### onset_raw = eda.annotations.onset - shift_EDA
-        ### duration_raw = eda.annotations.duration + shift_EDA
-        # Define raw annotations
-        ### later_annot_raw = mne.Annotations  (onset=onset_raw,
-        ###                                     duration=eda.annotations.duration,
-        ###                                     description=eda.annotations.description)
-        ### raw.set_annotations(later_annot_raw) 
-        ###############################################################################################
-
 
         # EEG Band-pass filter
         raw.filter(None, 120., fir_design='firwin')
         
         
-        ####### CREATE GENERAL EPOCH AND THE FILTER DEPENDING FBANDS #####
         events = mne.make_fixed_length_events(  raw,
                                                 id=3000,
                                                 duration=pp.duration,
                                                 overlap=2.0)
-        if raw_rejection == False:
+        if eeg_rejection == False:
             reject = None    
             
         ec = mne.Epochs(raw, events,
                         event_id=3000, tmin=baseline, tmax=pp.duration, proj=True,
                         baseline=(baseline, 0), reject=reject, preload=True,
                         decim=1)
-
+        
         return ec
-
-#%%         
+#%%
         X = []
 
         for fb in pp.fbands:
-            ##### FILTRAR EPOCAS #####
-            ### rf = raw.copy().load_data().filter(fb[0], fb[1])
+            
             ec_fbands = ec.copy().load_data().pick_types(eeg=True).filter(fb[0], fb[1])
-            ##### PASAR TODO ESTO JUSTO ANTES DE LA FUNCION, CREANDO UNA EPOCA GENERAL  ######
-            #####                    Y DESPUES FILTRO LAS EPOCAS                        ######
-            ### events = mne.make_fixed_length_events(rf,
-            ###                                    id=3000,
-            ###                                    duration=pp.duration,
-            ###                                    overlap=2.0)
-            
-            ######## ADD picks='eeg' to ec ########
-            ### ec = mne.Epochs(rf, events,
-            ###                 event_id=3000, tmin=baseline, tmax=pp.duration, proj=True,
-            ###                 baseline=(baseline, 0), reject=reject, preload=True,
-            ###                 decim=1, picks='eeg')
-            
-            ##### CHANGE ;ec' FOR 'ec_fbands' #####
+
             X.append([mne.compute_covariance(
                                             ec_fbands[ii], method='oas')['data'][None]
                                             for ii in range(len(ec_fbands))])   
@@ -303,21 +257,6 @@ def global_run (number_subject      =   subject_number,
         n_sub, n_fb, n_ch, _ = X.shape
         
         
-        ####### ESTO TIENE QUE ELIMINARSE EN CASO DE UTILIZAR LA FUNCION DE SHIFT_TIME #######
-        #######        EN LUGAR DE ESTO DEBERIA UTILIZAR ACA LA FUNCION NUEVA          #######
-        
-        ### events_shift = mne.make_fixed_length_events(eda, id=3000, start=1.5,
-        ###                                            duration=pp.duration, overlap=2.0)
-        ### eda_epochs_shift = mne.Epochs(eda, events_shift, event_id=3000, tmin=0, tmax=pp.duration,
-        ###                        proj=True, baseline=None, preload=True, decim=1)
-        
-        ### events_eda = mne.make_fixed_length_events(raw, id=3000, start=1.5,
-        ###                                            duration=pp.duration, overlap=2.0)
-        ### eda_epochs_eda = mne.Epochs(raw, events_eda, event_id=3000, tmin=0, tmax=pp.duration,
-        ###                       proj=True, baseline=None, preload=True, decim=1)
-        
-        ######################################################################################
-        
         eda_epochs = ec.copy().pick_channels(['EDA']).shift_time(tshift= shift_EDA, relative=True)
         
         if target == 'mean':
@@ -326,10 +265,7 @@ def global_run (number_subject      =   subject_number,
             y = eda_epochs.get_data().max(axis=2)[:, 0] - eda_epochs.get_data().min(axis=2)[:, 0]
         else:
             y = eda_epochs.get_data().var(axis=2)[:, 0]     
-        
-        return X #, y
-#%%           
-            
+ 
         n_components = np.arange(1, 32, 1) # max components --> 32 --> 32 EEG channels
         # now let's do group shuffle split
         splits = np.array_split(np.arange(len(y)), n_splits)
@@ -453,14 +389,15 @@ all_subjects ={}
 for i in ['01']:
     experiment_results = global_run(number_subject=i, crop = False,
                                     eog_rejection       =   True  ,
-                                    raw_rejection       =   True ,
+                                    eeg_rejection       =   True  ,
                                     annotations_resp    =   True  ,
                                     annotations_no_stim =   True  )
     all_subjects[i] = [experiment_results]
    
 #   X = experiment_results[0]
 #   y = experiment_results[1]
-    ec = experiment_results #[0]
+#    ec = experiment_results [0]
+#    reject = experiment_results [1]
 
 #%%    
 alpha = list(np.logspace(-3, 5, 100))
@@ -567,7 +504,7 @@ raw.set_channel_types({ 'Resp': 'misc'})
 eog_epochs = mne.preprocessing.create_eog_epochs(raw)
 if len(eog_epochs) >= 5: #  (?) Why?
     # Reject eog artifacts epochs with autoreject
-    reject_eog = get_rejection_threshold(eog_epochs, decim=5)
+    reject_eog = get_rejection_threshold(eog_epochs, ch_types=['eeg'], decim=5)
     del reject_eog['eog']
 else:
     reject_eog = None
