@@ -22,9 +22,7 @@ fbands = [(0.1, 1.5),  # low
           (8.0, 15.0),  # alpha
           (15.0, 26.0),  # beta_low
           (26.0, 35.0),  # beta_high
-          (35.0, 50.0),  # gamma_low
-          (50.0, 74.0),  # gamma_mid
-          (76.0, 120.0)]  # gamma_high
+          (35.0, 50.0)]  # gamma_low
 
 
 def get_subject(file_raw):

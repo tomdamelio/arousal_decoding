@@ -26,7 +26,7 @@ from subject_number import subject_number
 from preprocessing import get_rejection_threshold as get_rejection_threshold_2
 from autoreject import get_rejection_threshold
 
-
+#%%
 ############################################################################
 n_compo = 32
 scale = 'auto'
@@ -563,6 +563,9 @@ raw = openfiles_raw(subject = '01',
 # EDA stim --> EDA 
 # chs: 1 MISC, 1 EMG, 32 EEG, 4 EOG, 1 STIM
 # crop for memory purposes (use to test things) 
+
+
+#%%
 raw.set_channel_types({ 'Resp': 'misc'})      
 eog_epochs = mne.preprocessing.create_eog_epochs(raw)
 if len(eog_epochs) >= 5: #  (?) Why?

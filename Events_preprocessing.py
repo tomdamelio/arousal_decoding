@@ -1,3 +1,4 @@
+#%%
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -23,7 +24,7 @@ from subject_number import subject_number
 def save_bad_no_stim_annotations (subject_number = subject_number,
                                   save_EDA_EEG_bad_resp = False,
                                   plot_EDA_EEG_bad_resp = False,
-                                  plot_events = False,
+                                  plot_events = True,
                                   plot_annotations = True,
                                   save_EDA_EEG_bad_no_stim = False):
     
@@ -41,7 +42,7 @@ def save_bad_no_stim_annotations (subject_number = subject_number,
     :save_EDA_EEG_bad_no_stim:  Boolean. Save all channels with bad_no_stim annotations. 
 
     """ 
-
+    subject_number = ['01']
     for i in subject_number: 
         
         # Read .fif files (with respiration annotations)
@@ -132,7 +133,7 @@ def save_bad_no_stim_annotations (subject_number = subject_number,
         
         if plot_events == True:
             %matplotlib
-            raw2.plot()
+            raw_fif.plot()
 
         ##### Programmatically annotate bad signal ####
         # bad signal annotate as 'bad_no_stim':
@@ -199,7 +200,7 @@ def save_bad_no_stim_annotations (subject_number = subject_number,
         
         if plot_annotations == True:
             %matplotlib
-            raw2.plot()
+            raw2.plot(events=events)
         
         if save_EDA_EEG_bad_no_stim ==True:
             extension = '.fif'
@@ -207,5 +208,7 @@ def save_bad_no_stim_annotations (subject_number = subject_number,
             fname_3 = op.join(directory,'s'+ number_subject + extension)
             raw2.save(fname = fname_3, overwrite=True)
 
-
+#%%
 save_bad_no_stim_annotations()
+
+# %%
