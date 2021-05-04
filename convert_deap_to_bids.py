@@ -26,20 +26,20 @@ for path in input_path.glob("*.bdf"):
     # Rename channel EDA and set GSR as channel type
     raw.rename_channels(mapping={'GSR1': 'EDA'})
     raw.set_channel_types({'EXG1': 'eog',
-                          'EXG2': 'eog',
-                          'EXG3': 'eog',
-                          'EXG4': 'eog',
-                          'EXG5': 'emg',
-                          'EXG6': 'emg',
-                          'EXG7': 'emg',
-                          'EXG8': 'emg',
-                          'EDA': 'misc',
-                          'GSR2': 'misc',
-                          'Erg1': 'misc',
-                          'Erg2': 'misc',
-                          'Resp': 'misc',
-                          'Plet': 'misc',
-                          'Temp': 'misc'})
+                           'EXG2': 'eog',
+                           'EXG3': 'eog',
+                           'EXG4': 'eog',
+                           'EXG5': 'emg',
+                           'EXG6': 'emg',
+                           'EXG7': 'emg',
+                           'EXG8': 'emg',
+                           'EDA': 'misc',
+                           'GSR2': 'misc',
+                           'Erg1': 'misc',
+                           'Erg2': 'misc',
+                           'Resp': 'misc',
+                           'Plet': 'misc',
+                           'Temp': 'misc'})
 
     subject_id = path.name.split('.bdf')[0]
     subject_number = int(subject_id.strip('s'))
