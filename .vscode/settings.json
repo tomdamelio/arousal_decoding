@@ -1,3 +1,4 @@
 {
-    "jupyter.jupyterServerType": "local"
+    "jupyter.jupyterServerType": "local",
+    "python.pythonPath": "/home/parietal/dengeman/miniconda3/envs/py37/bin/python"
 }
