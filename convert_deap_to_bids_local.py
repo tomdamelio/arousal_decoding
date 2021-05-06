@@ -1,4 +1,3 @@
-#%%
 import os
 import pathlib
 from pathlib import Path
@@ -19,8 +18,6 @@ if not bids_root.exists():
     os.makedirs(bids_root)
 
 task = 'TaskEmotionRecognition'
-
-#%%
 
 for path in input_path.glob("*.bdf"):
 
@@ -88,10 +85,8 @@ for path in input_path.glob("*.bdf"):
     write_raw_bids(raw, bids_path, event_id=event_id,
                    events_data=events, overwrite=True)
 
-#%%
 print_dir_tree(bids_root)
 
-#%%
-counts = count_events(bids_root)
-counts
+count_events(bids_root)
+
 
