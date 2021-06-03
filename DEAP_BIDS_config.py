@@ -30,7 +30,7 @@ else:
 
 interactive = False
 
-subjects =  ['01']  #'all' 
+subjects =  'all' 
 
 annotations_root = pathlib.Path("~/OneDrive/Escritorio/tomas_damelio/outputs/data/annotations_bad_no_stim+bad_resp").expanduser()
 
@@ -41,7 +41,7 @@ ch_types = ['eeg']
 data_type = 'eeg'
 
 # Drop unused channels (see DEAP documentation)
-drop_channels = ['-1', '-0', 'GSR2', 'Erg1', 'Erg2']
+drop_channels = ['GSR2', 'Erg1', 'Erg2']
 
 eeg_reference = 'average'
 
@@ -63,7 +63,7 @@ fixed_length_epochs_duration = 10.
 # Overlap in epochs
 fixed_length_epochs_overlap = 2.
 
-baseline = (None, 0) #None 
+baseline =  None 
 
 spatial_filter = 'ssp'
 
