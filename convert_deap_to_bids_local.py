@@ -1,30 +1,30 @@
+#%%
 import os
 import pathlib
 from pathlib import Path
 import mne
-from mne_bids import write_raw_bids, BIDSPath, print_dir_tree
+from mne_bids import write_raw_bids, BIDSPath, print_dir_tree, read_raw_bids
 from mne_bids.stats import count_events
 
 # setup paths
-
-input_path = Path('./data/')
+input_path = Path('./data')
 bids_root = Path('./outputs/DEAP-bids')
 
-# prepare montage
-
+# declare montage
 montage = mne.channels.make_standard_montage(kind="biosemi32", head_size=0.095)
 
 if not bids_root.exists():
     os.makedirs(bids_root)
 
-task = 'TaskEmotionRecognition'
+task = 'rest'
 
 for path in input_path.glob("*.bdf"):
 
     raw = mne.io.read_raw_bdf(path)
 
-    # Rename channel EDA and set GSR as channel type
+    # Rename channel EDA 
     raw.rename_channels(mapping={'GSR1': 'EDA'})
+                      
     raw.set_channel_types({'EXG1': 'eog',
                            'EXG2': 'eog',
                            'EXG3': 'eog',
@@ -39,11 +39,11 @@ for path in input_path.glob("*.bdf"):
                            'Erg2': 'misc',
                            'Resp': 'misc',
                            'Plet': 'misc',
-                           'Temp': 'misc'})
-
-    subject_id = path.name.split('.bdf')[0]
+                           'Temp': 'misc'}) 
+    
+    subject_id = path.name.split('.bdf')[0] 
     subject_number = int(subject_id.strip('s'))
-    subject_id = subject_id.replace('s', '0')
+    subject_id = subject_id.replace('s', '')
 
     if subject_number > 28:
         raw.rename_channels(mapping={'-1': 'Status'})
@@ -55,6 +55,8 @@ for path in input_path.glob("*.bdf"):
     raw.set_channel_types({ 'Status': 'stim'})
 
     raw.set_montage(montage)
+    
+    raw.info['line_freq'] = 50  # specify power line frequency as required by BIDS
 
     # Create events based on stim channel
     events = mne.find_events(raw, stim_channel='Status')
@@ -87,6 +89,6 @@ for path in input_path.glob("*.bdf"):
 
 print_dir_tree(bids_root)
 
-count_events(bids_root)
-
+counts = count_events(bids_root)
+counts
 
