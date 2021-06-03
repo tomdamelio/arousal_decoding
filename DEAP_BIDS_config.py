@@ -32,6 +32,7 @@ interactive = False
 
 subjects =  'all' 
 
+#Change annotations_root depending on Drago's location
 annotations_root = pathlib.Path("~/OneDrive/Escritorio/tomas_damelio/outputs/data/annotations_bad_no_stim+bad_resp").expanduser()
 
 task = 'rest' 
