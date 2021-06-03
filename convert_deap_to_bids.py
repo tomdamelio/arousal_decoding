@@ -87,14 +87,3 @@ for path in input_path.glob("*.bdf"):
     bids_path = BIDSPath(subject=subject_id, task=task, root=bids_root)
     write_raw_bids(raw, bids_path, event_id=event_id,
                    events_data=events, overwrite=True)
-
-print_dir_tree(bids_root)
-
-counts = count_events(bids_root)
-counts
-
-
-#%%
-raw = read_raw_bids(bids_path=bids_path)
-
-# %%

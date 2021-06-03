@@ -23,17 +23,19 @@ from mne_bids.path import get_entity_vals
 study_name = 'DEAP'  
 
 if os.name == 'nt':
-    bids_root = pathlib.Path("~/OneDrive/Escritorio/tomas_damelio/outputs/DEAP-bids").expanduser()
+    bids_root = pathlib.Path(
+        "~/OneDrive/Escritorio/tomas_damelio/outputs/DEAP-bids").expanduser()
     
 else:
-    bids_root = pathlib.Path("~/storage/store/data/DEAP/outputs/DEAP-bids").expanduser()
+    bids_root = pathlib.Path(
+        "~/storage/store/data/DEAP/outputs/DEAP-bids").expanduser()
 
 interactive = False
 
 subjects =  'all' 
 
 #Change annotations_root depending on Drago's location
-annotations_root = pathlib.Path("~/OneDrive/Escritorio/tomas_damelio/outputs/data/annotations_bad_no_stim+bad_resp").expanduser()
+annotations_root = pathlib.Path("/outputs/data/annotations")
 
 task = 'rest' 
 
@@ -56,13 +58,13 @@ filter_freq = dict(eeg=(None, 49), misc=(0.05, 5))
 
 epochs_tmin = 0.
 
-epochs_tmax = 10.
+epochs_tmax = 5.
 
 # Lengths of epoch duration (in secs)
-fixed_length_epochs_duration = 10.
+fixed_length_epochs_duration = 5.
 
 # Overlap in epochs
-fixed_length_epochs_overlap = 2.
+fixed_length_epochs_overlap = 0.
 
 baseline =  None 
 
@@ -89,6 +91,8 @@ reject = 'auto'
 reject_tmin = None
 
 reject_tmax: Optional[float] = None
+
+autoreject_decim = 4
 
 decode = False
 
