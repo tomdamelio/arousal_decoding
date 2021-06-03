@@ -88,7 +88,7 @@ def global_preprocessing(number_subject = subject_number,
 
     """ Reads all subjects' files and preprocess signals.
     
-    Parameters
+    Parametersf
     ----------
 
     number_subject : str or list
