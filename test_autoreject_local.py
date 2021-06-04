@@ -80,7 +80,8 @@ def _compute_add_ssp_exg(raw):
 def global_preprocessing(number_subject = subject_number,              
                          crop = False,
                          avg_reference = True,
-                         annotations = pathlib.Path("~/OneDrive/Escritorio/tomas_damelio/outputs/data/annotations_bad_no_stim+bad_resp").expanduser(),
+                         annotations = pathlib.Path(
+                             "~/OneDrive/Escritorio/tomas_damelio/outputs/data/annotations_bad_no_stim+bad_resp").expanduser(),
                          project_eog = True,
                          apply_autoreject  = True,
                          baseline = None):
@@ -132,10 +133,10 @@ def global_preprocessing(number_subject = subject_number,
         
         if int(subject) > 28:
             raw.rename_channels(mapping={'-1': 'Status'} )
-#            raw.drop_channels('-0')
+            raw.drop_channels('-0')
         
-#        elif int(subject) > 23:
-#            raw.rename_channels(mapping={'': 'Status'} )
+        elif int(subject) > 23:
+            raw.rename_channels(mapping={'': 'Status'} )
 
         if annotations is not None:
             # read annotations
@@ -148,10 +149,10 @@ def global_preprocessing(number_subject = subject_number,
         if crop == True:
             raw = raw.crop(0., 500.)
         
-        raw.filter(0.1, 5, fir_design='firwin', picks='GSR1') 
+        raw.filter(0.05, 5, fir_design='firwin', picks='GSR1') 
 
         # EEG Band-pass filter
-        raw.filter(0.1, 40., fir_design='firwin')
+        raw.filter(None, 40., fir_design='firwin')
         
         raw.set_channel_types({'EXG1': 'eog',
                         'EXG2': 'eog',
@@ -205,13 +206,14 @@ def global_preprocessing(number_subject = subject_number,
                         baseline=baseline, reject=reject, preload=True,
                         decim=1)
         
-        return raw, ec, events_reject
-#%%        
+        ec.plot_drop_log()
+        #return raw, ec, events_reject
+
+#%%      
 #### TEST AUTOREJECT ####
 # https://mne.tools/dev/auto_tutorials/preprocessing/10_preprocessing_overview.html
-raw, ec, events_reject = global_preprocessing(number_subject = '32',
+raw, = global_preprocessing(number_subject = '32',
                                               project_eog = True,
-                                              #annotations = None,
                                               apply_autoreject = 'auto')
 #%matplotlib
 #raw.plot()
@@ -625,7 +627,7 @@ eog_epochs.average().plot()
 # Test if there are annotations in MNE BIDS Pipeline's files
 directory = 'outputs/DEAP-bids'
 extension = '.fif'
-subject = '29'
+subject = '01'
 process = 'proc-filt_raw'
 fname = op.join(directory, 'derivatives/mne-bids-pipeline', 'sub-'+ subject, 'eeg', 'sub-'+
                 subject + '_task-rest_' + process + extension)
