@@ -34,6 +34,8 @@ n_splits = 2
 n_jobs = 20
 ############################################################################
 
+#%%
+
 def run_low_rank(n_components, X, y, cv, estimators, scoring, groups):
     out = dict(n_components=n_components)
     for name, est in estimators.items(): #e.g. name --> riemann // est --> make_pipeline(...)
@@ -130,10 +132,10 @@ def global_preprocessing(number_subject = subject_number,
         
         if int(subject) > 28:
             raw.rename_channels(mapping={'-1': 'Status'} )
-            raw.drop_channels('-0')
+#            raw.drop_channels('-0')
         
-        elif int(subject) > 23:
-            raw.rename_channels(mapping={'': 'Status'} )
+#        elif int(subject) > 23:
+#            raw.rename_channels(mapping={'': 'Status'} )
 
         if annotations is not None:
             # read annotations
@@ -620,3 +622,12 @@ eog_epochs.plot_image(combine='mean', picks='eeg')
 eog_epochs.average().plot()
 
 #%%
+# Test if there are annotations in MNE BIDS Pipeline's files
+directory = 'outputs/DEAP-bids'
+extension = '.fif'
+subject = '29'
+process = 'proc-filt_raw'
+fname = op.join(directory, 'derivatives/mne-bids-pipeline', 'sub-'+ subject, 'eeg', 'sub-'+
+                subject + '_task-rest_' + process + extension)
+raw = mne.io.read_raw_fif(fname, preload=True)
+# %%
