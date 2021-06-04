@@ -25,19 +25,17 @@ study_name = 'DEAP'
 if os.name == 'nt':
     bids_root = pathlib.Path(
         "~/OneDrive/Escritorio/tomas_damelio/outputs/DEAP-bids").expanduser()
+    annotations_root = pathlib.Path(
+        "~/OneDrive/Escritorio/tomas_damelio/outputs/data/annotations_bad_no_stim+bad_resp").expanduser()
     
 else:
     bids_root = pathlib.Path(
         "~/storage/store/data/DEAP/outputs/DEAP-bids").expanduser()
+    annotations_root = pathlib.Path("/outputs/data/annotations").expanduser()
 
 interactive = False
 
-subjects =  ['01']#'all' 
-
-#Change annotations_root depending on Drago's location
-#annotations_root = pathlib.Path("/outputs/data/annotations").expanduser()
-annotations_root = pathlib.Path("~/OneDrive/Escritorio/tomas_damelio/outputs/data/annotations_bad_no_stim+bad_resp").expanduser()
-
+subjects =  ['01'] #'all' 
 
 task = 'rest' 
 
