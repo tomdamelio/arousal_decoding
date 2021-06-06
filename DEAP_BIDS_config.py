@@ -35,7 +35,7 @@ else:
 
 interactive = False
 
-subjects =  ['01'] #'all' 
+subjects =  'all' #['02'] 
 
 task = 'rest' 
 
@@ -46,7 +46,7 @@ data_type = 'eeg'
 # Drop unused channels (see DEAP documentation)
 drop_channels = ['-1', '-0', 'GSR2', 'Erg1', 'Erg2']
 
-eeg_reference = 'average'
+eeg_reference = [] #'average'
 
 eeg_template_montage: 'biosemi32'
 
@@ -54,7 +54,7 @@ analyze_channels = 'all'
 
 conditions = ['rest']
 
-filter_freq = dict(eeg=(None, 49), misc=(0.05, 5))
+filter_freq = dict(eeg=(0.1, 49), misc=(0.05, 5))
 
 epochs_tmin = 0.
 

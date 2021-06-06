@@ -603,7 +603,7 @@ for subject in ['01', '02', '03']: #subject_number:
             globals()[f'plots_results_{proj}'].append(globals()[f'fig_proj_{proj}']) 
 
         report.add_slider_to_section(globals()[f'plots_results_{proj}'],
-                                      times, f'S{subject}',
+                                      times,     f'S{subject}',
                                       title = f'EEG reference Proj = {proj}',
                                       image_format='png')  
 
@@ -627,9 +627,25 @@ eog_epochs.average().plot()
 # Test if there are annotations in MNE BIDS Pipeline's files
 directory = 'outputs/DEAP-bids'
 extension = '.fif'
-subject = '01'
-process = 'proc-filt_raw'
+subject = '30'
+process = 'raw'
+#process = 'proc-filt_raw'
 fname = op.join(directory, 'derivatives/mne-bids-pipeline', 'sub-'+ subject, 'eeg', 'sub-'+
                 subject + '_task-rest_' + process + extension)
 raw = mne.io.read_raw_fif(fname, preload=True)
+
+events, _ = mne.events_from_annotations(raw)
+rows_end_exp = np.where(events[:,2] == 1)
+events_end_exp= events[rows_end_exp]
+end_exp_time = float(events_end_exp[:,0]/raw.info['sfreq'])
+raw.crop(0., end_exp_time)
 # %%
+# Test if there is stim channel in DEAP BIDS raw files
+directory = 'outputs/DEAP-bids'
+extension = '.bdf'
+subject = '04'
+fname = op.join(directory, 'sub-'+ subject, 'eeg', 'sub-'+
+                subject + '_task-rest_eeg' + extension)
+raw = mne.io.read_raw_bdf(fname, preload=True)
+#%%
+
