@@ -35,7 +35,7 @@ else:
 
 interactive = False
 
-subjects =  'all' #['02'] 
+subjects =  'all' 
 
 task = 'rest' 
 
@@ -43,10 +43,9 @@ ch_types = ['eeg']
 
 data_type = 'eeg'
 
-# Drop unused channels (see DEAP documentation)
 drop_channels = ['-1', '-0', 'GSR2', 'Erg1', 'Erg2']
 
-eeg_reference = [] #'average'
+eeg_reference = [] 
 
 eeg_template_montage: 'biosemi32'
 
@@ -60,10 +59,8 @@ epochs_tmin = 0.
 
 epochs_tmax = 5.
 
-# Lengths of epoch duration (in secs)
 fixed_length_epochs_duration = 5.
 
-# Overlap in epochs
 fixed_length_epochs_overlap = 0.
 
 baseline =  None 

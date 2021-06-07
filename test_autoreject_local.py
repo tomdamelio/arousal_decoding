@@ -627,7 +627,7 @@ eog_epochs.average().plot()
 # Test if there are annotations in MNE BIDS Pipeline's files
 directory = 'outputs/DEAP-bids'
 extension = '.fif'
-subject = '30'
+subject = '01'
 process = 'raw'
 #process = 'proc-filt_raw'
 fname = op.join(directory, 'derivatives/mne-bids-pipeline', 'sub-'+ subject, 'eeg', 'sub-'+
@@ -648,4 +648,16 @@ fname = op.join(directory, 'sub-'+ subject, 'eeg', 'sub-'+
                 subject + '_task-rest_eeg' + extension)
 raw = mne.io.read_raw_bdf(fname, preload=True)
 #%%
+# Check PSD log scale
+directory = 'outputs/DEAP-bids'
+extension = '.fif'
+subject = '01'
+process = 'proc-clean_epo'
+#process = 'proc-filt_raw'
+fname = op.join(directory, 'derivatives/mne-bids-pipeline', 'sub-'+ subject, 'eeg', 'sub-'+
+                subject + '_task-rest_' + process + extension)
+epochs = mne.read_epochs(fname, preload=True)
+%matplotlib
+epochs.plot_psd(xscale='log')
 
+#%%
