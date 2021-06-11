@@ -13,6 +13,7 @@ from meegpowreg.power_features import _compute_covs_epochs
 derivative_path = 'C:/Users/dadam/OneDrive/Escritorio/tomas_damelio/outputs/DEAP-bids/derivatives/mne-bids-pipeline'
 
 def _compute_covs(subject, kind, freqs):
+    # set epochs paths in BIDS format
     epochs_path = BIDSPath(subject=subject,
                            task=kind,
                            datatype='eeg',
@@ -21,14 +22,22 @@ def _compute_covs(subject, kind, freqs):
                            extension='.fif',
                            suffix='epo',
                            check=False)
+    # read epochs
     epochs = mne.read_epochs(epochs_path)
+    
+    # pick only eeg data
     epochs.pick_types(eeg=True)
+    
     covs = list()
+    # for every epoch
     for i in range(len(epochs)):
+        #for every frequency band
         for _, fb in freqs.items():
-#           _compute_covs_epochs(epoch, freqs)
+#           # subset one epoch and filter based on freq band
             ec = epochs[i:i+1].copy().load_data().filter(fb[0], fb[1])
+            # calculate its covariance
             cov = mne.compute_covariance(ec, method='oas', rank=None)
+            # append to data
             covs.append(cov.data)
     #covs_event = [_compute_covs_epochs(epoch, frequency_bands=freqs) for epoch in epochs]
     return covs
