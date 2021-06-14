@@ -4,3 +4,4 @@
 *.dat
 *.fif
 *.h5
+*.npy
