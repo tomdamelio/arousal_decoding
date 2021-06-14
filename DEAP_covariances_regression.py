@@ -42,7 +42,7 @@ pipelines = {'riemann': make_filter_bank_regressor(
                 projection_params=None,
                 vectorization_params=None)}
 
-DEBUG = True
+DEBUG = False
 
 if DEBUG:
     N_JOBS = 1
