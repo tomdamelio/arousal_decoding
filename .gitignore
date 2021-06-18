@@ -5,3 +5,6 @@
 *.fif
 *.h5
 *.npy
+*.png
+*.html
+*.xlsx

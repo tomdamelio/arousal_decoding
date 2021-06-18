@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import mne
 from mne_bids import BIDSPath
 from sklearn.model_selection import (
-     cross_val_score, ShuffleSplit)
+     cross_val_score, ShuffleSplit, KFold, GroupShuffleSplit, cross_val_predict)
 from meegpowreg import make_filter_bank_regressor
 from subject_number import subject_number as subjects
 
@@ -23,13 +23,13 @@ freqs = {"low": (0.1, 1.5),
 pipelines = {'riemann': make_filter_bank_regressor(
                 names=freqs.keys(),
                 method='riemann',
-                projection_params=dict(scale='auto', reg=1.e-05),
+                projection_params=dict(scale='auto', reg=1.e-05, n_compo = 31),
                 vectorization_params=dict(metric='riemann')),
              'spoc': make_filter_bank_regressor(
                 names=freqs.keys(),
                 method='spoc',
                 projection_params=dict(scale='auto', reg=0,
-                                       shrink=0.5),
+                                       shrink=0.5, n_compo = 3),
                 vectorization_params=None),
              'log_diag': make_filter_bank_regressor(
                 names=freqs.keys(),
@@ -42,10 +42,11 @@ pipelines = {'riemann': make_filter_bank_regressor(
                 projection_params=None,
                 vectorization_params=None)}
 
-DEBUG = False
+DEBUG = True
 
 if DEBUG:
     N_JOBS = 1
+    sub = '01'
     subjects = subjects[:1]
 
 if os.name == 'nt':
@@ -76,7 +77,14 @@ for subject in subjects:
                            check=False)
    # read epochs
    epochs = mne.read_epochs(epochs_path)
+   
+   picks_eda = mne.pick_channels(ch_names = epochs.ch_names ,include=['EDA'])
 
+   if int(sub) < 23:
+       epochs.apply_function(fun=lambda x: x/1000, picks=picks_eda)
+   else:
+       epochs.apply_function(fun=lambda x: (10**9/x)/1000, picks=picks_eda)
+   
    #whitout shift
    eda_epochs = epochs.copy().pick_channels(['EDA'])
 
@@ -84,7 +92,7 @@ for subject in subjects:
    #eda_epochs = epochs.copy().pick_channels(['EDA']).shift_time(tshift= 1.5, relative=True)
 
    # How are we going to model our target?
-   target = 'delta'
+   target = 'mean'
 
    if target == 'mean':
       y = eda_epochs.get_data().mean(axis=2)[:, 0]  
@@ -96,7 +104,7 @@ for subject in subjects:
 
    # Cross validation
    seed = 42
-   n_splits = 10
+   n_splits = 2
    n_jobs = 10
 
    all_scores = dict()
@@ -104,12 +112,12 @@ for subject in subjects:
    #score_name, scoring = "mae", "neg_mean_absolute_error"
    score_name, scoring = "r2", "r2"
 
-   cv_name = 'shuffle-split'
+   cv_name = '2Fold'
 
-   # cv = KFold(n_splits=n_splits, random_state=seed, shuffle=True)
+   cv = KFold(n_splits=n_splits) #, random_state=seed, shuffle=False)
 
    for key, estimator in pipelines.items():
-      cv = ShuffleSplit(n_splits=n_splits, random_state=seed)
+      #cv = KFold(n_splits=n_splits)
       scores = cross_val_score(X=df_features, y=y, estimator=estimator,
                               cv=cv, n_jobs=min(n_splits, n_jobs),
                               scoring=scoring)
@@ -122,5 +130,38 @@ for subject in subjects:
    np.save(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
                   f'all_scores_models_DEAP_{score_name}_{cv_name}.npy'),
          all_scores)
+
+#%%
+# Obtain mean performance
+all_scores_mean = dict()
+for estimator, performance in all_scores.items():
+   all_scores_mean[estimator] = performance.mean()
+print('riemann -> ', all_scores_mean['riemann'])
+print('spoc -> ', all_scores_mean['spoc'])
+print('log_diag -> ', all_scores_mean['log_diag'])
+print('upper -> ', all_scores_mean['upper'])
+
+# %%
+clf = make_filter_bank_regressor(
+                names=freqs.keys(),
+                method='riemann',
+                projection_params=dict(scale='auto', reg=1.e-05, n_compo = 31),
+                vectorization_params=dict(metric='riemann'))
+
+# Run cross validaton
+y_preds = cross_val_predict(clf, df_features, y, cv=cv)
+
+# Plot the True EDA power and the EDA predicted from EEG data
+fig, ax = plt.subplots(1, 1, figsize=[10, 4])
+#times = raw.times[epochs.events[:, 0] - raw.first_samp]
+times = [i for i in range(len(epochs))]
+ax.plot(times, y, color='r', label='True EDA')
+ax.plot(times, y_preds, color='b', label='Predicted EDA')
+ax.set_xlabel('Time (s)')
+ax.set_ylabel('EDA average')
+ax.set_title('SPoC EEG Predictions')
+plt.legend()
+mne.viz.tight_layout()
+plt.show()
 
 # %%

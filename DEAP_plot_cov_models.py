@@ -4,7 +4,6 @@ import os.path as op
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
-import config as cfg
 import seaborn
 
 from subject_number import subject_number as subjects
@@ -19,13 +18,15 @@ score_name, scoring = "r2", "r2"
 
 cv_name = 'shuffle-split'
 
-all_scores = {}
+all_scores = list()
 for subject in subjects:
     score = np.load(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
                     f'all_scores_models_DEAP_{score_name}_{cv_name}.npy'),
-                        allow_pickle=True)[()]
-    all_scores[subject] = score
-
+                        allow_pickle=True)
+    this_score = pd.DataFrame(score[()])
+    this_score['subject'] = subject
+    all_scores.append(this_score)
+all_scores = pd.concat(all_scores)
 
 # extracting the data
 

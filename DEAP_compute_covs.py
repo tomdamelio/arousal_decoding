@@ -1,3 +1,4 @@
+#%%
 import numpy as np
 import pandas as pd
 import os
@@ -53,7 +54,7 @@ def _compute_covs(subject, freqs):
     epochs_all = read_bids_epochs(subject)
     
     if DEBUG:
-        epochs_all = epochs_all[:3]
+        epochs_all = epochs_all #[:3]
         
     covs = list()
     for ii in range(len(epochs_all)):
@@ -63,7 +64,7 @@ def _compute_covs(subject, freqs):
         
     return covs
 
-DEBUG = False
+DEBUG = True
 freqs = {"low": (0.1, 1.5),
          "delta": (1.5, 4.0),
          "theta": (4.0, 8.0),
@@ -74,7 +75,7 @@ freqs = {"low": (0.1, 1.5),
 
 if DEBUG:
     N_JOBS = 1
-    subjects = subjects[:3]
+    subjects = subjects[:1]
 else:
     N_JOBS = 20
     
@@ -87,3 +88,5 @@ for sub, dd in zip(subjects, out):
         op.join(derivative_path, 'sub-' + ''.join(sub), 'eeg', 'sub-' + ''.join(sub) + '_covariances.h5'), dd,
         overwrite=True)
 
+
+# %%
