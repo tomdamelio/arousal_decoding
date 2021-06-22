@@ -1,0 +1,123 @@
+#%%
+import os.path as op
+import os
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import mne
+from mne_bids import BIDSPath
+from sklearn.model_selection import (
+     cross_val_score, ShuffleSplit, KFold)
+from sklearn.preprocessing import StandardScaler
+from sklearn import preprocessing
+from sklearn.pipeline import make_pipeline
+from sklearn.decomposition import PCA
+from sklearn.linear_model import RidgeCV
+from meegpowreg import make_filter_bank_regressor, make_filter_bank_transformer
+from subject_number import subject_number as subjects
+from numpy.lib.npyio import save
+from scipy.signal import detrend, savgol_filter
+
+
+DEBUG = False
+alpha_and_beta = False
+
+if DEBUG:
+    N_JOBS = 1
+    subjects = ['01', '02']
+    
+report = mne.Report(verbose=True)
+
+if os.name == 'nt':
+    derivative_path = 'C:/Users/dadam/OneDrive/Escritorio/tomas_damelio/outputs/DEAP-bids/derivatives/mne-bids-pipeline'  
+else:
+    derivative_path = 'storage/store/data/DEAP/outputs/DEAP-bids/derivatives/mne-bids-pipeline'
+
+PCA_all_subjects = dict()
+for subject in subjects:
+    if alpha_and_beta == True:
+        PCA_123 = np.load(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
+                    'PCA_alpha_beta.npy'))
+    else:
+        PCA_123 = np.load(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
+                    'PCA.npy'))        
+    df_PCA = pd.DataFrame(PCA_123, columns = ['PCA1','PCA2','PCA3'])
+    PCA_all_subjects[subject] = PCA_123
+    
+# read dict with mean(EDA) for every subjects
+fname_out = op.join(derivative_path, 'mean_eda_all_subs.npy')
+mean_eda_all_subjects_npy = np.load(fname_out, allow_pickle=True)
+
+
+# Define plotting function
+def fig_plot(mean_eda_all_subjects_npy = mean_eda_all_subjects_npy,
+             PCA_all_subjects = PCA_all_subjects,
+             PCA_dimension = 1,
+             subject = '01',
+             savgol = True,
+             strength_savgol = 9):
+    
+    y = mean_eda_all_subjects_npy[()][subject]
+    idx_ndarray_PCA = PCA_dimension-1
+    PCA = PCA_all_subjects[subject][:,[idx_ndarray_PCA]]
+    # Scale
+    scaler = preprocessing.StandardScaler()
+    y_scaled = scaler.fit_transform(y.reshape(-1, 1))
+    PCA_scaled = scaler.fit_transform(PCA)
+    if savgol == True:
+        y_scaled = savgol_filter(np.ravel(y_scaled), strength_savgol, 2)
+        PCA_scaled = savgol_filter(np.ravel(PCA_scaled), strength_savgol, 2)    
+    mid_point = int(len(PCA_scaled)/2)
+    last_point = int(len(PCA_scaled))
+    
+    # Create a new figure
+    fig_aux = plt.figure(figsize= [17.2, 4.8])
+    plt.plot(y_scaled, label = 'EDA')
+    plt.plot(PCA_scaled, label='EEG')
+    plt.ylabel('z-score')
+    plt.xlabel('time (epochs)')
+    y_lim_value = plt.gca().get_ylim()
+    
+    
+    fig = plt.figure(figsize= [17.2, 4.8])
+    plt.plot(y_scaled[0:int(last_point/3)], label = 'EDA')
+    plt.plot(PCA_scaled[0:int(last_point/3)], label='EEG')
+    plt.ylabel('z-score')
+    plt.xlabel('time (epochs)')
+    plt.ylim(y_lim_value)
+    plt.legend()
+    
+    fig2 = plt.figure(figsize= [17.2, 4.8])
+    plt.plot([i for i in range(int(last_point/3),int(last_point/3)*2)], y_scaled[int(last_point/3):int(last_point/3)*2], label = 'EDA')
+    plt.plot([i for i in range(int(last_point/3),int(last_point/3)*2)], PCA_scaled[int(last_point/3):int(last_point/3)*2], label='EEG')
+    plt.ylabel('z-score')
+    plt.xlabel('time (epochs)')
+    plt.ylim(y_lim_value)
+    plt.legend()
+    
+    fig3 = plt.figure(figsize= [17.2, 4.8])
+    plt.plot([i for i in range(int(last_point/3)*2,last_point)], y_scaled[int(last_point/3)*2:last_point], label = 'EDA')
+    plt.plot([i for i in range(int(last_point/3)*2,last_point)], PCA_scaled[int(last_point/3)*2:last_point], label='EEG')
+    plt.ylabel('z-score')
+    plt.xlabel('time (epochs)')
+    plt.ylim(y_lim_value)
+    plt.legend()
+    
+    return fig, fig2, fig3
+
+for dimension in [1,2,3]:
+    for subject in subjects:
+        plot1, plot2, plot3 = fig_plot(subject=subject, PCA_dimension = dimension)
+        # add the custom plots to the report:
+        report.add_figs_to_section([plot1, plot2, plot3],
+                                captions=['PCA {} EEG and EDA comparison - Subject {}'.format(dimension, subject),
+                                          'PCA {} EEG and EDA comparison - Subject {}'.format(dimension, subject),
+                                          'PCA {} EEG and EDA comparison - Subject {}'.format(dimension, subject)],
+                                section= '{} PCA dimension'.format(dimension))
+
+if alpha_and_beta == True:
+    report.save('Report_PCA_all_subjects_alpha_beta.html', overwrite=True)
+else:
+    report.save('Report_PCA_all_subjects.html', overwrite=True)
+
+#%%
