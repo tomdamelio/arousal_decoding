@@ -15,9 +15,7 @@ from sklearn.linear_model import RidgeCV
 from meegpowreg import make_filter_bank_regressor, make_filter_bank_transformer
 from subject_number import subject_number as subjects
 
-
-freqs = {
-         "low": (0.1, 1.5),
+freqs = {"low": (0.1, 1.5),
          "delta": (1.5, 4.0),
          "theta": (4.0, 8.0),
          "alpha": (8.0, 15.0),
@@ -33,7 +31,7 @@ filter_bank_PCA = make_pipeline(
     StandardScaler(),
     PCA(n_components=3))
 
-DEBUG = False
+DEBUG = True
 
 if DEBUG:
     N_JOBS = 1
@@ -50,17 +48,36 @@ for subject in subjects:
 
     X_cov = np.array([cc for cc in covs])
    
+
     df_features = pd.DataFrame(
         {band: list(X_cov[:, ii]) for ii, band in
         enumerate(freqs)})
     
     PCA_eeg = filter_bank_PCA.fit_transform(df_features)
 
-    np.save(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
-                  'PCA.npy'), PCA_eeg)
+    #np.save(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
+    #              'PCA.npy'), PCA_eeg)
 #%%
+
+df_PCA_test = pd.DataFrame(PCA_eeg, columns = ['PCA1','PCA2','PCA3'])
+
+#%%
+for ii, band in enumerate(freqs[3:5]):
+    print (ii, band)
+
+#%%
+np.save(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
+                  'PCA_alpha_beta.npy'),)
+
+#%%
+
 for subject in subjects:
     PCA_123 = np.load(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
                   'PCA.npy'))
     df_PCA = pd.DataFrame(PCA_123, columns = ['PCA1','PCA2','PCA3'])
 
+    
+
+
+
+# %%

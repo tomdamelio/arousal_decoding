@@ -67,38 +67,31 @@ def fig_plot(mean_eda_all_subjects_npy = mean_eda_all_subjects_npy,
     
     
     fig = plt.figure(figsize= [17.2, 4.8])
-    plt.plot(y_scaled[0:int(mid_point/2)], label = 'EDA')
-    plt.plot(PCA_scaled[0:int(mid_point/2)], label='EEG')
+    plt.plot(y_scaled[0:int(last_point/3)], label = 'EDA')
+    plt.plot(PCA_scaled[0:int(last_point/3)], label='EEG')
     plt.ylim(y_lim_value)
     plt.legend()
     
     fig2 = plt.figure(figsize= [17.2, 4.8])
-    plt.plot([i for i in range(int(mid_point/2),mid_point)], y_scaled[int(mid_point/2):mid_point], label = 'EDA')
-    plt.plot([i for i in range(int(mid_point/2),mid_point)], PCA_scaled[int(mid_point/2):mid_point], label='EEG')
+    plt.plot([i for i in range(int(last_point/3),int(last_point/3)*2)], y_scaled[int(last_point/3):int(last_point/3)*2], label = 'EDA')
+    plt.plot([i for i in range(int(last_point/3),int(last_point/3)*2)], PCA_scaled[int(last_point/3):int(last_point/3)*2], label='EEG')
     plt.ylim(y_lim_value)
     plt.legend()
     
     fig3 = plt.figure(figsize= [17.2, 4.8])
-    plt.plot([i for i in range(mid_point,int(mid_point*1.5))], y_scaled[mid_point:int(mid_point*1.5)],label ='EDA')
-    plt.plot([i for i in range(mid_point,int(mid_point*1.5))], PCA_scaled[mid_point:int(mid_point*1.5)],label='EEG')
+    plt.plot([i for i in range(int(last_point/3)*2,last_point)], y_scaled[int(last_point/3)*2:last_point], label = 'EDA')
+    plt.plot([i for i in range(int(last_point/3)*2,last_point)], PCA_scaled[int(last_point/3)*2:last_point], label='EEG')
     plt.ylim(y_lim_value)
     plt.legend()
     
-    fig4 = plt.figure(figsize= [17.2, 4.8])
-    plt.plot([i for i in range(int(mid_point*1.5),last_point)], y_scaled[int(mid_point*1.5):last_point], label = 'EDA')
-    plt.plot([i for i in range(int(mid_point*1.5),last_point)], PCA_scaled[int(mid_point*1.5):last_point], label='EEG')
-    plt.ylim(y_lim_value)
-    plt.legend()
-    
-    return fig, fig2, fig3, fig4
+    return fig, fig2, fig3
 
 for dimension in [1,2,3]:
     for subject in subjects:
-        plot1, plot2, plot3, plot4 = fig_plot(subject=subject, PCA_dimension = dimension)
+        plot1, plot2, plot3 = fig_plot(subject=subject, PCA_dimension = dimension)
         # add the custom plots to the report:
-        report.add_figs_to_section([plot1, plot2, plot3, plot4],
+        report.add_figs_to_section([plot1, plot2, plot3],
                                 captions=['PCA {} EEG and EDA comparison - Subject {}'.format(dimension, subject),
-                                          'PCA {} EEG and EDA comparison - Subject {}'.format(dimension, subject),
                                           'PCA {} EEG and EDA comparison - Subject {}'.format(dimension, subject),
                                           'PCA {} EEG and EDA comparison - Subject {}'.format(dimension, subject)],
                                 section= '{} PCA dimension'.format(dimension))
