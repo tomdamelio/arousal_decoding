@@ -31,7 +31,7 @@ if os.name == 'nt':
 else:
     bids_root = pathlib.Path(
         "~/storage/store/data/DEAP/outputs/DEAP-bids").expanduser()
-    annotations_root = pathlib.Path("/outputs/data/annotations").expanduser()
+    annotations_root = pathlib.Path("/outputs/data/annotations_bad_no_stim").expanduser()
 
 interactive = False
 
