@@ -174,4 +174,10 @@ df_epochs_ratings.drop(df_epochs_ratings.filter(regex='_y$').columns.tolist(),ax
 fname_rating = op.join(derivative_path,'epochs_and_ratings.csv')
 df_epochs_ratings.to_csv(fname_rating, index=False)
 
+#%%
+import pandas as pd
+import os.path as op
+derivative_path = 'C:/Users/dadam/OneDrive/Escritorio/tomas_damelio/outputs/DEAP-bids/derivatives/mne-bids-pipeline'  
+fname_rating = op.join(derivative_path,'epochs_and_ratings.csv')
+df_epochs_ratings = pd.read_csv(fname_rating)
 # %%
