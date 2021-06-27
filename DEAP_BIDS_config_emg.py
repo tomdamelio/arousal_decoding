@@ -31,6 +31,8 @@ if os.name == 'nt':
 else:
     bids_root = pathlib.Path(
         "/storage/store2/derivatives/DEAP-bids")
+    deriv_root = pathlib.Path(
+        "/storage/store2/derivatives/DEAP-bids/derivatives")
     annotations_root = pathlib.Path("./outputs/data/annotations_bad_no_stim")
 
 interactive = False
