@@ -14,7 +14,7 @@ from joblib import Parallel, delayed
 
 import DEAP_BIDS_config_emg as cfg
 
-derivative_path = cfg.deriv_path
+derivative_path = cfg.deriv_root
 if os.name == 'nt':
     derivative_path = 'C:/Users/dadam/OneDrive/Escritorio/tomas_damelio/outputs/DEAP-bids/derivatives/mne-bids-pipeline'  
 
