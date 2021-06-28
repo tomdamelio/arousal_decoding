@@ -27,13 +27,15 @@ if os.name == 'nt':
         "~/OneDrive/Escritorio/tomas_damelio/outputs/DEAP-bids").expanduser()
     annotations_root = pathlib.Path(
         "~/OneDrive/Escritorio/tomas_damelio/outputs/data/annotations_bad_no_stim").expanduser()
-    
+    N_JOBS = 4
+
 else:
     bids_root = pathlib.Path(
         "/storage/store2/derivatives/DEAP-bids")
     deriv_root = pathlib.Path(
         "/storage/store2/derivatives/DEAP-bids/derivatives")
     annotations_root = pathlib.Path("./outputs/data/annotations_bad_no_stim")
+    N_JOBS = 15
 
 interactive = False
 
@@ -102,8 +104,6 @@ run_source_estimation = False
 l_trans_bandwidth = 'auto'
 
 h_trans_bandwidth = 'auto'
-
-N_JOBS = 4
 
 random_state = 42
 

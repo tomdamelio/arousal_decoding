@@ -22,10 +22,12 @@ import json
 from mne.decoding import SPoC
 from joblib import Parallel, delayed
 
+import DEAP_BIDS_config_emg as cfg
+
+
+derivative_path = cfg.deriv_root
 if os.name == 'nt':
     derivative_path = 'C:/Users/dadam/OneDrive/Escritorio/tomas_damelio/outputs/DEAP-bids/derivatives/mne-bids-pipeline'  
-else:
-    derivative_path = 'storage/store/data/DEAP/outputs/DEAP-bids/derivatives/mne-bids-pipeline'
 
 def read_bids_epochs (subject):
     # set epochs paths in BIDS format
