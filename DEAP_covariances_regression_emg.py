@@ -12,10 +12,12 @@ from meegpowreg import make_filter_bank_regressor
 from subject_number import subject_number as subjects
 from joblib import Parallel, delayed
 
+import DEAP_BIDS_config_emg as cfg
+
+derivative_path = cfg.deriv_path
 if os.name == 'nt':
     derivative_path = 'C:/Users/dadam/OneDrive/Escritorio/tomas_damelio/outputs/DEAP-bids/derivatives/mne-bids-pipeline'  
-else:
-    derivative_path = 'storage/store/data/DEAP/outputs/DEAP-bids/derivatives/mne-bids-pipeline'
+
 
 DEBUG = False
 
