@@ -24,10 +24,8 @@ from joblib import Parallel, delayed
 
 import DEAP_BIDS_config_emg as cfg
 
-
 derivative_path = cfg.deriv_root
-if os.name == 'nt':
-    derivative_path = 'C:/Users/dadam/OneDrive/Escritorio/tomas_damelio/outputs/DEAP-bids/derivatives/mne-bids-pipeline'  
+N_JOBS = cfg.N_JOBS
 
 def read_bids_epochs (subject):
     # set epochs paths in BIDS format
@@ -74,15 +72,12 @@ def _compute_covs(subject, freqs):
         
     return covs
 
-DEBUG = False
+DEBUG = True
 
-freqs = {"beta": (15.0, 30.0)}
+freqs = freq_bands = {'beta_l': (15., 22.), 'beta_h': (22., 30.)}
 
 if DEBUG:
-    N_JOBS = 1
     subjects = subjects[:2]
-else:
-    N_JOBS = 20
     
 out = Parallel(n_jobs=N_JOBS)(
     delayed(_compute_covs)(subject = subject, freqs=freqs)
@@ -90,7 +85,7 @@ out = Parallel(n_jobs=N_JOBS)(
 
 for sub, dd in zip(subjects, out):
     mne.externals.h5io.write_hdf5(
-        op.join(derivative_path, 'sub-' + ''.join(sub), 'eeg', 'sub-' + ''.join(sub) + '_covariances_emg.h5'), dd,
+        op.join(derivative_path, 'sub-' + sub , 'eeg', 'sub-' + sub + '_covariances_emg_TEST.h5'), dd,
         overwrite=True)
     
-#%%
+
