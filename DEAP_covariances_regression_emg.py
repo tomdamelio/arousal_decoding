@@ -23,8 +23,8 @@ n_splits = 2
 n_jobs = 10
 score_name, scoring = "r2", "r2"
 cv_name = '2Fold'
-freqs = {"beta_l": (15.0, 22.0),
-         "beta_h": (22.0, 30.0)}
+freqs = {"alpha": (8.0, 12.0),
+         "beta": (15.0, 30.0)}
 
 pipelines = {'riemann': make_filter_bank_regressor(
                 names=freqs.keys(),
@@ -76,14 +76,14 @@ for subject in subjects:
     fname_covs = op.join(derivative_path, 'sub-' + subject, 'eeg', 'sub-' + subject + '_covariances_emg.h5')
     covs = mne.externals.h5io.read_hdf5(fname_covs)
     
-    if DEBUG:
-       covs = covs[:30]
+#    if DEBUG:
+#       covs = covs[:30]
  
     X_cov = np.array([cc for cc in covs])    
     df_features = pd.DataFrame(
        {band: list(X_cov[:, ii]) for ii, band in
-       enumerate(freqs)})
- 
+       enumerate(freqs) if band == 'beta'})
+
     # Read EMG(y) data
    
     if os.name == 'nt':
