@@ -27,6 +27,8 @@ if os.name == 'nt':
         "~/OneDrive/Escritorio/tomas_damelio/outputs/DEAP-bids").expanduser()
     annotations_root = pathlib.Path(
         "~/OneDrive/Escritorio/tomas_damelio/outputs/data/annotations_bad_no_stim").expanduser()
+    deriv_root = pathlib.Path(
+        '~/OneDrive/Escritorio/tomas_damelio/outputs/DEAP-bids/derivatives/mne-bids-pipeline').expanduser()
     N_JOBS = 4
 
 else:
