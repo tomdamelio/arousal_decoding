@@ -15,7 +15,7 @@ import DEAP_BIDS_config_emg as cfg
 
 derivative_path = cfg.deriv_root
 
-DEBUG = True
+DEBUG = False
 
 n_components = np.arange(1, 32, 1)
 seed = 42
@@ -76,13 +76,13 @@ for subject in subjects:
     fname_covs = op.join(derivative_path, 'sub-' + subject, 'eeg', 'sub-' + subject + '_covariances_emg.h5')
     covs = mne.externals.h5io.read_hdf5(fname_covs)
     
-#    if DEBUG:
-#       covs = covs[:30]
+    if DEBUG:
+       covs = covs[:30]
  
     X_cov = np.array([cc for cc in covs])    
     df_features = pd.DataFrame(
        {band: list(X_cov[:, ii]) for ii, band in
-       enumerate(freqs) if band == 'beta'})
+       enumerate(freqs)})
 
     # Read EMG(y) data
    
@@ -131,7 +131,7 @@ for subject in subjects:
         out_frames.append(this_df)
     out_df = pd.concat(out_frames)
     out_df.to_csv(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
-                   '_DEAP_component_scores.csv'))
+                   '_DEAP_component_scores_TEST.csv'))
  
     mean_df = out_df.groupby('n_components').mean().reset_index()
     best_components = {
@@ -162,6 +162,7 @@ for subject in subjects:
        all_scores[key] = scores
  
     np.save(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
-                   '_all_scores_models_DEAP_emg_' + score_name + '_' + cv_name + '.npy'),
+                   '_all_scores_models_DEAP_emg_' + score_name + '_' + cv_name + '_TEST.npy'),
           all_scores)
+ 
  
