@@ -35,13 +35,13 @@ else:
     bids_root = pathlib.Path(
         "/storage/store2/derivatives/DEAP-bids")
     deriv_root = pathlib.Path(
-        "/storage/store2/derivatives/DEAP-bids/derivatives")
+        "/storage/store2/work/tdamelio/tomas_damelio/outputs/DEAP-bids/derivatives/mne-bids-pipeline")
     annotations_root = pathlib.Path("/storage/store2/work/tdamelio/tomas_damelio/outputs/data/annotations_bad_no_stim")
     N_JOBS = 15
 
 interactive = False
 
-subjects =  'all' 
+subjects = 'all' 
 
 task = 'rest' 
 
