@@ -36,7 +36,7 @@ else:
         "/storage/store2/derivatives/DEAP-bids")
     deriv_root = pathlib.Path(
         "/storage/store2/derivatives/DEAP-bids/derivatives")
-    annotations_root = pathlib.Path("./outputs/data/annotations_bad_no_stim")
+    annotations_root = pathlib.Path("/storage/store2/work/tdamelio/tomas_damelio/outputs/data/annotations_bad_no_stim")
     N_JOBS = 15
 
 interactive = False
@@ -59,7 +59,7 @@ analyze_channels = 'all'
 
 conditions = ['rest']
 
-filter_freq = dict(eeg=(15., 30.), misc=(0.05, 5.), emg=(20., None))
+filter_freq = dict(eeg=(0.1, 49.), misc=(0.05, 5.), emg=(20., None))
 
 epochs_tmin = 0.
 

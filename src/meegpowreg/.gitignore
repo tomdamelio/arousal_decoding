@@ -1,0 +1,6 @@
+.*
+!.gitignore
+junit-results.xml
+*.swp
+*.egg-info
+__pycache__
