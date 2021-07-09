@@ -72,9 +72,15 @@ def _compute_covs(subject, freqs):
         
     return covs
 
-DEBUG = True
+DEBUG = False
 
-freqs = freq_bands = {'beta_l': (15., 22.), 'beta_h': (22., 30.)}
+freqs = freq_bands = {'low': (0.1, 1.5),
+                      'delta': (1.5, 4.),
+                      'theta': (4., 8.),
+                      'alpha': (8., 15.),
+                      'beta_l': (15., 26.),
+                      'beta_h': (26., 35.),
+                      'gamma': (35., 49.)}
 
 if DEBUG:
     subjects = subjects[:2]
@@ -85,7 +91,7 @@ out = Parallel(n_jobs=N_JOBS)(
 
 for sub, dd in zip(subjects, out):
     mne.externals.h5io.write_hdf5(
-        op.join(derivative_path, 'sub-' + sub , 'eeg', 'sub-' + sub + '_covariances_emg_TEST.h5'), dd,
+        op.join(derivative_path, 'sub-' + sub , 'eeg', 'sub-' + sub + '_covariances_emg.h5'), dd,
         overwrite=True)
     
 
