@@ -21,7 +21,7 @@ np <- import("numpy")
 
 subjects <- sprintf("%02d", 1:32) 
 
-measure <- 'emg'
+measure <- 'eda'
 
 measure_uppercase <- toupper(measure)
 
