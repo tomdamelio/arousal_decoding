@@ -26,17 +26,23 @@ scores_filename <- str_glue('sub-{sub}_all_scores_models_DEAP_{measure}_r2_2Fold
 
 measure_uppercase <- toupper(measure)
 
+if (.Platform$OS.type == "windows"){
+  scores_dir <- str_glue('{measure}-scores-drago-all-freqs')
+  fname <- str_glue("./outputs/DEAP-bids/derivatives/mne-bids-pipeline/")
+} else {
+  fname <- str_glue("./outputs/DEAP-bids/derivatives/mne-bids-pipeline-{measure}/")
+}  
+
 for (sub in subjects)
 {
 
 if (.Platform$OS.type == "windows"){
-  scores_dir <- str_glue('{measure}-scores-drago-all-freqs')
-  fname <- str_glue("./outputs/DEAP-bids/derivatives/mne-bids-pipeline/{scores_dir}/")
+  fname_2 <- str_glue("{scores_dir}/")
 } else {
-  fname <- str_glue("./outputs/DEAP-bids/derivatives/mne-bids-pipeline-{measure}/sub-{sub}/eeg/")
+  fname_2 <- str_glue("sub-{sub}/eeg/")
 }  
   
-fname_data <- fname + scores_filename
+fname_data <- fname + fname_2 + scores_filename
   
 data <- np$load(
   fname_data,
@@ -215,7 +221,12 @@ ggplot(data = subset(data_long, estimator != "dummy"),
 
 score_out <- str_glue("fig_DEAP_{measure}_model_comp")
 
-fname_output <- fname + score_out
+if (.Platform$OS.type == "windows"){
+  fname_output <- fname + fname_2 + score_out
+} else {
+  fname_output <- fname + score_out
+}  
+
 
 ggsave(paste0(fname_output, ".png"),
        width = 8, height = 5, dpi = 300)
