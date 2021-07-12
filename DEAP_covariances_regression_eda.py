@@ -11,7 +11,7 @@ from meegpowreg import make_filter_bank_regressor
 from subject_number import subject_number as subjects
 from joblib import Parallel, delayed
 
-import DEAP_BIDS_config_emg as cfg
+import DEAP_BIDS_config_eda as cfg
 
 derivative_path = cfg.deriv_root
 
@@ -78,7 +78,7 @@ def run_low_rank(n_components, X, y, estimators, cv, scoring):
     return out
 
 for subject in subjects:
-    fname_covs = op.join(derivative_path, 'sub-' + subject, 'eeg', 'sub-' + subject + '_covariances_emg.h5')
+    fname_covs = op.join(derivative_path, 'sub-' + subject, 'eeg', 'sub-' + subject + '_covariances_eda.h5')
     covs = mne.externals.h5io.read_hdf5(fname_covs)
     
     if DEBUG:
@@ -92,7 +92,7 @@ for subject in subjects:
     # Read EMG(y) data
    
     if os.name == 'nt':
-      fname_epochs = derivative_path / 'emg-clean-epo-files'
+      fname_epochs = derivative_path / 'eda-clean-epo-files'
       epochs = mne.read_epochs(op.join(fname_epochs, 'sub-' + subject + '_task-rest_proc-clean_epo.fif'))
 
     else: 
@@ -136,7 +136,7 @@ for subject in subjects:
         out_frames.append(this_df)
     out_df = pd.concat(out_frames)
     out_df.to_csv(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
-                   '_DEAP_component_scores.csv'))
+                   '_DEAP_component_scores_eda.csv'))
  
     mean_df = out_df.groupby('n_components').mean().reset_index()
     best_components = {
@@ -167,7 +167,7 @@ for subject in subjects:
        all_scores[key] = scores
  
     np.save(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
-                   '_all_scores_models_DEAP_emg_' + score_name + '_' + cv_name + '.npy'),
+                   '_all_scores_models_DEAP_eda_' + score_name + '_' + cv_name + '.npy'),
           all_scores)
  
  
