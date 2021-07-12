@@ -22,7 +22,6 @@ np <- import("numpy")
 subjects <- sprintf("%02d", 1:32) 
 
 measure <- 'eda'
-scores_filename <- str_glue('sub-{sub}_all_scores_models_DEAP_{measure}_r2_2Fold.npy')
 
 measure_uppercase <- toupper(measure)
 
@@ -41,7 +40,9 @@ if (.Platform$OS.type == "windows"){
 } else {
   fname_2 <- str_glue("sub-{sub}/eeg/")
 }  
-  
+
+scores_filename <- str_glue('sub-{sub}_all_scores_models_DEAP_{measure}_r2_2Fold.npy')
+    
 fname_data <- fname + fname_2 + scores_filename
   
 data <- np$load(
