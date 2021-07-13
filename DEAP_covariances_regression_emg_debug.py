@@ -12,7 +12,7 @@ from subject_number import subject_number as subjects
 from joblib import Parallel, delayed
 
 
-measure = 'eda'
+measure = 'emg'
 
 if measure == 'emg':
     import DEAP_BIDS_config_emg as cfg
