@@ -74,13 +74,13 @@ def _compute_covs(subject, freqs):
 
 DEBUG = False
 
-freqs = freq_bands = {'low': (0.1, 1.5),
-                      'delta': (1.5, 4.),
-                      'theta': (4., 8.),
-                      'alpha': (8., 15.),
-                      'beta_l': (15., 26.),
-                      'beta_h': (26., 35.),
-                      'gamma': (35., 49.)}
+freqs = {'low': (0.1, 1.5),
+         'delta': (1.5, 4.),
+         'theta': (4., 8.),
+         'alpha': (8., 15.),
+         'beta_l': (15., 26.),
+         'beta_h': (26., 35.),
+         'gamma': (35., 49.)}
 
 if DEBUG:
     subjects = subjects[:2]
