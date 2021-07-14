@@ -21,13 +21,14 @@ np <- import("numpy")
 
 subjects <- sprintf("%02d", 1:32) 
 
-measure <- 'eda'
+measure <- 'emg'
+date <- '14-07'
 
 measure_uppercase <- toupper(measure)
 
 if (.Platform$OS.type == "windows"){
-  scores_dir <- str_glue('{measure}-scores-drago-all-freqs')
-  fname <- str_glue("./outputs/DEAP-bids/derivatives/mne-bids-pipeline/")
+  scores_dir <- str_glue('{measure}-scores--{date}')
+  fname <- str_glue("./outputs/DEAP-bids/derivatives/mne-bids-pipeline-{measure}/")
 } else {
   fname <- str_glue("./outputs/DEAP-bids/derivatives/mne-bids-pipeline-{measure}/")
 }  
@@ -206,7 +207,7 @@ ggplot(data = subset(data_long, estimator != "dummy"),
   labs(y = expression(R^2), x = NULL, parse = T) +
   guides(size = F, alpha = F) +
   theme(legend.position = c(0.8, 0.86)) +
-  coord_flip(ylim = c(-2, 2)) +
+  coord_flip(ylim = c(-1, 1)) +
   scale_fill_manual(values = my_color_cats, breaks = names(my_color_cats),
                     labels = est_labels,
                     name = NULL) +
@@ -220,7 +221,7 @@ ggplot(data = subset(data_long, estimator != "dummy"),
            size = annotate_text_size,
            parse = T, angle = 270)
 
-score_out <- str_glue("fig_DEAP_{measure}_model_comp")
+score_out <- str_glue("fig_DEAP_{measure}_model_comp_{date}")
 
 if (.Platform$OS.type == "windows"){
   fname_output <- fname + fname_2 + score_out
