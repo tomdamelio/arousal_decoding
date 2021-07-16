@@ -29,7 +29,7 @@ if measure == 'emg':
 else:
     import DEAP_BIDS_config_eda as cfg
 
-DEBUG = True
+DEBUG = False
 
 derivative_path = cfg.deriv_root
 n_jobs = 15
@@ -38,7 +38,7 @@ cv_name = '2Fold'
 
 if DEBUG:
    n_jobs = 4
-   subjects = subjects[:1]
+   subjects = subjects[16:]
    subject = '01'
    debug_out = '_DEBUG'
 else:
@@ -90,7 +90,7 @@ for subject in subjects:
         plt.savefig(op.join(derivative_path, 'emg_plot_debugging--16-07', 'sub-' + subject +
                         f'_emg_epochs_plot_debugging.png'))
         
-    epochs = epochs[1600:1800]
+    epochs = epochs[600:800]
     
     if measure == 'emg':
         picks_emg = mne.pick_types(epochs.info, emg=True)
@@ -117,4 +117,4 @@ for subject in subjects:
         plt.savefig(op.join(derivative_path, 'emg_plot_debugging--16-07', 'sub-' + subject +
                         f'_emg_epochs_plot_debugging_200_epochs.png'))
     
-#%%
+    
