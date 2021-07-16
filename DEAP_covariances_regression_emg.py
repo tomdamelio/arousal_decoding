@@ -19,7 +19,7 @@ if measure == 'emg':
 else:
     import DEAP_BIDS_config_eda as cfg
 
-DEBUG = False
+DEBUG = True
 
 derivative_path = cfg.deriv_root
 
@@ -66,7 +66,7 @@ pipelines = {'riemann': make_filter_bank_regressor(
                 vectorization_params=None)}
 
 if DEBUG:
-   n_jobs = 15
+   n_jobs = 4
    subjects = subjects[31:32]
    subject = '32'
    debug_out = '_DEBUG'
@@ -128,7 +128,7 @@ for subject in subjects:
         picks_emg = mne.pick_types(epochs.info, emg=True)
         epochs = epochs.filter(20., 30., picks=picks_emg)
         # How are we going to model our target? -> Mean of two EMG Trapezius sensors
-        emg_epochs = epochs.copy().pick_channels(['EXG7','EXG8'])
+        emg_epochs = epochs.copy().pick_channels(['EXG5','EXG6'])
         
         y_stat = 'var'
         y = emg_epochs.get_data().var(axis=2).mean(axis=1)
@@ -164,12 +164,8 @@ for subject in subjects:
         out_frames.append(this_df)
     out_df = pd.concat(out_frames)
     
-    if os.name == 'nt':
-        out_df.to_csv(op.join(derivative_path, f'{measure}-cov-matrices-all-freqs', 'sub-' + subject +
-                              f'_DEAP_component_scores_{measure}{debug_out}.csv'))
-    else:
-        out_df.to_csv(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
-                              f'_DEAP_component_scores_{measure}{debug_out}.csv'))
+    out_df.to_csv(op.join(derivative_path, f'{measure}_opt--16-07-meegpowreg', 'sub-' + subject +
+                            f'_DEAP_component_scores_{measure}{debug_out}.csv'))
  
     mean_df = out_df.groupby('n_components').mean().reset_index()
     best_components = {
@@ -199,15 +195,9 @@ for subject in subjects:
           print(scores)
        all_scores[key] = scores
  
-    if os.name == 'nt':
-        np.save(op.join(derivative_path, f'{measure}-cov-matrices-all-freqs', 'sub-' + subject +
-                   f'_all_scores_models_DEAP_{measure}_' + score_name + '_' + cv_name + f'{debug_out}.npy'),
-          all_scores)           
-    else:
-        np.save(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
-                   f'_all_scores_models_DEAP_{measure}_' + score_name + '_' + cv_name + f'{debug_out}.npy'),
-          all_scores)
- 
+    np.save(op.join(derivative_path, f'{measure}_scores--16-07-meegpowreg', 'sub-' + subject +
+                f'_all_scores_models_DEAP_{measure}_' + score_name + '_' + cv_name + f'{debug_out}.npy'),
+        all_scores)            
   
     clf = make_filter_bank_regressor(
                 names=freqs.keys(),
@@ -228,10 +218,8 @@ for subject in subjects:
     ax.set_ylabel(f'{measure} {y_stat}')
     ax.set_title(f'Riemann model - {measure} prediction')
     plt.legend()
-    if os.name == 'nt':
-        plt.savefig(op.join(derivative_path, f'{measure}-cov-matrices-all-freqs', 'sub-' + subject +
-                            f'_DEAP_plot_prediction_{measure}{debug_out}.png'))
-    else:
-        plt.savefig(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
-                              f'_DEAP_plot_prediction_{measure}{debug_out}.png'))
+
+    plt.savefig(op.join(derivative_path, f'{measure}_plot--16-07-meegpowreg', 'sub-' + subject +
+                        f'_DEAP_plot_prediction_{measure}{debug_out}.png'))
+
 
