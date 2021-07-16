@@ -1,4 +1,3 @@
-#%%
 import os.path as op
 import os
 import pandas as pd
@@ -22,7 +21,7 @@ from sklearn.linear_model import RidgeCV, Ridge
 from meegpowreg import make_filter_bank_regressor, make_filter_bank_transformer
 from subject_number import subject_number as subjects
 
-#%%
+
 measure = 'emg'
 
 if measure == 'emg':
@@ -30,7 +29,7 @@ if measure == 'emg':
 else:
     import DEAP_BIDS_config_eda as cfg
 
-DEBUG = False
+DEBUG = True
 
 derivative_path = cfg.deriv_root
 n_jobs = 15
@@ -71,7 +70,7 @@ for subject in subjects:
     if measure == 'emg':
         picks_emg = mne.pick_types(epochs.info, emg=True)
         epochs = epochs.filter(20., 30., picks=picks_emg)
-        emg_epochs = epochs.copy().pick_channels(['EXG7','EXG8'])
+        emg_epochs = epochs.copy().pick_channels(['EXG5','EXG6'])
         y = emg_epochs.get_data().var(axis=2).mean(axis=1)
     else:
         picks_eda = mne.pick_channels(ch_names = epochs.ch_names,include=['EDA'])       
@@ -108,17 +107,10 @@ for subject in subjects:
         ax.set_ylabel(f'Mean(eda)')
     ax.set_title(f'Subject {subject} - {measure} Prediction (SPoC) - whitout meegpowreg pipeline')
     plt.legend()
-    if os.name == 'nt':
-        np.save(op.join(derivative_path,  'sub-' + subject +
-                   f'_scores_{measure}_' + score_name + '_NO_OPT_PIPELINE_spoc_' +
-                   cv_name + f'{debug_out}.npy'),
-          scores)  
-        plt.savefig(op.join(derivative_path,  'sub-' + subject +
-                            f'_plot_NO_OPT_PIPELINE_spoc_DEAP_{measure}_{cv_name}{debug_out}.png'))
-    else:
-        np.save(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
-                   f'_scores_{measure}_' + score_name + '_NO_OPT_PIPELINE_spoc_' +
-                   cv_name + f'{debug_out}.npy'),
-          scores)
-        plt.savefig(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
-                              f'_plot_NO_OPT_PIPELINE_spoc_DEAP_{measure}_{cv_name}{debug_out}.png'))
+
+    np.save(op.join(derivative_path, 'emg_scores--16-07', 'sub-' + subject +
+                f'_scores_{measure}_' + score_name + '_NO_OPT_PIPELINE_spoc_' +
+                cv_name + f'{debug_out}.npy'),
+        scores)  
+    plt.savefig(op.join(derivative_path, 'emg_plot--16-07', 'sub-' + subject +
+                        f'_plot_NO_OPT_PIPELINE_spoc_DEAP_{measure}_{cv_name}{debug_out}.png'))
