@@ -19,7 +19,7 @@ if measure == 'emg':
 else:
     import DEAP_BIDS_config_eda as cfg
 
-DEBUG = True
+DEBUG = False
 
 derivative_path = cfg.deriv_root
 
@@ -66,7 +66,7 @@ pipelines = {'riemann': make_filter_bank_regressor(
                 vectorization_params=None)}
 
 if DEBUG:
-   n_jobs = 4
+   n_jobs = 15
    subjects = subjects[31:32]
    subject = '32'
    debug_out = '_DEBUG'
@@ -91,7 +91,7 @@ for subject in subjects:
     if os.name == 'nt':
         fname_covs = op.join(derivative_path, f'{measure}-cov-matrices-all-freqs', 'sub-' + subject + f'_covariances_{measure}.h5')
     else:
-        fname_covs = op.join(derivative_path, 'sub-' + subject, 'eeg', 'sub-' + subject + '_covariances_{measure}.h5')
+        fname_covs = op.join(derivative_path, 'sub-' + subject, 'eeg', 'sub-' + subject + f'_covariances_{measure}.h5')
     
     covs = mne.externals.h5io.read_hdf5(fname_covs)
     
@@ -134,13 +134,13 @@ for subject in subjects:
         y = emg_epochs.get_data().var(axis=2).mean(axis=1)
     else: 
         picks_eda = mne.pick_channels(ch_names = epochs.ch_names ,include=['EDA'])       
+        epochs = epochs.filter(0.05, 5., picks=picks_eda)
         if int(subject) < 23:
             epochs.apply_function(fun=lambda x: x/1000, picks=picks_eda)
         else:
             epochs.apply_function(fun=lambda x: (10**9/x)/1000, picks=picks_eda)
             
         eda_epochs = epochs.copy().pick_channels(['EDA'])
-        
         y_stat = 'mean'
         y = eda_epochs.get_data().mean(axis=2)[:, 0] 
            
@@ -226,7 +226,7 @@ for subject in subjects:
     ax.plot(times, y_preds, color='b', label=f'Predicted {measure}')
     ax.set_xlabel('Time (s)')
     ax.set_ylabel(f'{measure} {y_stat}')
-    ax.set_title(f'Riemann model - {measure} prediction')
+    ax.set_title(f'Subject {subject} - Riemann model - {measure} prediction')
     plt.legend()
     if os.name == 'nt':
         plt.savefig(op.join(derivative_path, f'{measure}-cov-matrices-all-freqs', 'sub-' + subject +

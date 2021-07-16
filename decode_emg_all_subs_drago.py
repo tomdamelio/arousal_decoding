@@ -28,7 +28,7 @@ if measure == 'emg':
 else:
     import DEAP_BIDS_config_eda as cfg
 
-DEBUG = True
+DEBUG = False
 
 derivative_path = cfg.deriv_root
 n_jobs = 15

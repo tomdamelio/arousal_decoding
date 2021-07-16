@@ -11,11 +11,17 @@ from meegpowreg import make_filter_bank_regressor
 from subject_number import subject_number as subjects
 from joblib import Parallel, delayed
 
-import DEAP_BIDS_config_emg as cfg
 
-derivative_path = cfg.deriv_root
+measure = 'emg'
+
+if measure == 'emg':
+    import DEAP_BIDS_config_emg as cfg
+else:
+    import DEAP_BIDS_config_eda as cfg
 
 DEBUG = False
+
+derivative_path = cfg.deriv_root
 
 n_components = np.arange(1, 32, 1)
 seed = 42
@@ -23,6 +29,7 @@ n_splits = 2
 n_jobs = 15
 score_name, scoring = "r2", "r2"
 cv_name = '2Fold'
+
 freqs = {'low': (0.1, 1.5),
          'delta': (1.5, 4.),
          'theta': (4., 8.),
@@ -59,9 +66,12 @@ pipelines = {'riemann': make_filter_bank_regressor(
                 vectorization_params=None)}
 
 if DEBUG:
-   N_JOBS = 15
-   subjects = subjects[:1]
-   subject = '01'
+   n_jobs = 15
+   subjects = subjects[31:32]
+   subject = '32'
+   debug_out = '_DEBUG'
+else:
+   debug_out = ''
 
 def run_low_rank(n_components, X, y, estimators, cv, scoring):   
     out = dict(n_components=n_components)
@@ -78,7 +88,11 @@ def run_low_rank(n_components, X, y, estimators, cv, scoring):
     return out
 
 for subject in subjects:
-    fname_covs = op.join(derivative_path, 'sub-' + subject, 'eeg', 'sub-' + subject + '_covariances_emg.h5')
+    if os.name == 'nt':
+        fname_covs = op.join(derivative_path, f'{measure}-cov-matrices-all-freqs', 'sub-' + subject + f'_covariances_{measure}.h5')
+    else:
+        fname_covs = op.join(derivative_path, 'sub-' + subject, 'eeg', 'sub-' + subject + f'_covariances_{measure}.h5')
+    
     covs = mne.externals.h5io.read_hdf5(fname_covs)
     
     if DEBUG:
@@ -89,33 +103,47 @@ for subject in subjects:
        {band: list(X_cov[:, ii]) for ii, band in
        enumerate(freqs)})
 
-    # Read EMG(y) data
+    # Read EMG or EDA (y) data
    
     if os.name == 'nt':
-      fname_epochs = derivative_path / 'emg-clean-epo-files'
+      fname_epochs = derivative_path / 'clean-epo-files'
       epochs = mne.read_epochs(op.join(fname_epochs, 'sub-' + subject + '_task-rest_proc-clean_epo.fif'))
 
     else: 
       epochs_path = BIDSPath(subject= subject, 
-                              task='rest',
-                              datatype='eeg',
-                              root=derivative_path,
-                              processing='clean',
-                              extension='.fif',
-                              suffix='epo',
-                              check=False)
+                             task='rest',
+                             datatype='eeg',
+                             root=derivative_path,
+                             processing='clean',
+                             extension='.fif',
+                             suffix='epo',
+                             check=False)
       # read epochs
       epochs = mne.read_epochs(epochs_path)
-    
-    picks_emg = mne.pick_types(epochs.info, emg=True)
-    epochs.filter(20., 30., picks=picks_emg)
-    
+      
     if DEBUG:
-       epochs = epochs[:30]
+        epochs = epochs[:30]
     
-    # How are we going to model our target? -> Mean of two EMG Trapezius sensors
-    emg_epochs = epochs.copy().pick_channels(['EXG7','EXG8'])
-    y = emg_epochs.get_data().var(axis=2).mean(axis=1)
+    if measure == 'emg':
+        picks_emg = mne.pick_types(epochs.info, emg=True)
+        epochs = epochs.filter(20., 30., picks=picks_emg)
+        # How are we going to model our target? -> Mean of two EMG Trapezius sensors
+        emg_epochs = epochs.copy().pick_channels(['EXG7','EXG8'])
+        
+        y_stat = 'var'
+        y = emg_epochs.get_data().var(axis=2).mean(axis=1)
+    else: 
+        picks_eda = mne.pick_channels(ch_names = epochs.ch_names ,include=['EDA'])       
+        if int(subject) < 23:
+            epochs.apply_function(fun=lambda x: x/1000, picks=picks_eda)
+        else:
+            epochs.apply_function(fun=lambda x: (10**9/x)/1000, picks=picks_eda)
+            
+        eda_epochs = epochs.copy().pick_channels(['EDA'])
+        
+        y_stat = 'mean'
+        y = eda_epochs.get_data().mean(axis=2)[:, 0] 
+           
     
     low_rank_estimators = {k: v for k, v in pipelines.items()
                          if k in ('spoc', 'riemann')}
@@ -135,8 +163,13 @@ for subject in subjects:
         this_df['fold_idx'] = np.arange(len(this_df))
         out_frames.append(this_df)
     out_df = pd.concat(out_frames)
-    out_df.to_csv(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
-                   '_DEAP_component_scores.csv'))
+    
+    if os.name == 'nt':
+        out_df.to_csv(op.join(derivative_path, f'{measure}-cov-matrices-all-freqs', 'sub-' + subject +
+                              f'_DEAP_component_scores_{measure}{debug_out}.csv'))
+    else:
+        out_df.to_csv(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
+                              f'_DEAP_component_scores_{measure}{debug_out}.csv'))
  
     mean_df = out_df.groupby('n_components').mean().reset_index()
     best_components = {
@@ -166,8 +199,39 @@ for subject in subjects:
           print(scores)
        all_scores[key] = scores
  
-    np.save(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
-                   '_all_scores_models_DEAP_emg_' + score_name + '_' + cv_name + '.npy'),
+    if os.name == 'nt':
+        np.save(op.join(derivative_path, f'{measure}-cov-matrices-all-freqs', 'sub-' + subject +
+                   f'_all_scores_models_DEAP_{measure}_' + score_name + '_' + cv_name + f'{debug_out}.npy'),
+          all_scores)           
+    else:
+        np.save(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
+                   f'_all_scores_models_DEAP_{measure}_' + score_name + '_' + cv_name + f'{debug_out}.npy'),
           all_scores)
  
- 
+  
+    clf = make_filter_bank_regressor(
+                names=freqs.keys(),
+                method='riemann',
+                projection_params=dict(scale='auto', reg=1.e-05, n_compo = best_components['riemann']),
+                vectorization_params=dict(metric='riemann'))
+
+    # Run cross validaton
+    y_preds = cross_val_predict(clf, df_features, y, cv=cv)
+
+    # Plot the True EDA power and the EDA predicted from EEG data
+    fig, ax = plt.subplots(1, 1, figsize=[10, 4])
+    #times = raw.times[epochs.events[:, 0] - raw.first_samp]
+    times = [i for i in range(len(epochs))]
+    ax.plot(times, y, color='r', label=f'True {measure}')
+    ax.plot(times, y_preds, color='b', label=f'Predicted {measure}')
+    ax.set_xlabel('Time (s)')
+    ax.set_ylabel(f'{measure} {y_stat}')
+    ax.set_title(f'Riemann model - {measure} prediction')
+    plt.legend()
+    if os.name == 'nt':
+        plt.savefig(op.join(derivative_path, f'{measure}-cov-matrices-all-freqs', 'sub-' + subject +
+                            f'_DEAP_plot_prediction_{measure}{debug_out}.png'))
+    else:
+        plt.savefig(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
+                              f'_DEAP_plot_prediction_{measure}{debug_out}.png'))
+
