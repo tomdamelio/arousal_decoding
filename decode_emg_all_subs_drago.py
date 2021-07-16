@@ -1,3 +1,4 @@
+#%%
 import os.path as op
 import os
 import pandas as pd
@@ -21,6 +22,7 @@ from sklearn.linear_model import RidgeCV, Ridge
 from meegpowreg import make_filter_bank_regressor, make_filter_bank_transformer
 from subject_number import subject_number as subjects
 
+#%%
 measure = 'emg'
 
 if measure == 'emg':
@@ -48,7 +50,8 @@ for subject in subjects:
     
     if os.name == 'nt':
         fname_epochs = derivative_path / 'clean-epo-files'
-        epochs = mne.read_epochs(op.join(fname_epochs, 'sub-' + subject + '_task-rest_proc-clean_epo.fif'))
+        epochs = mne.read_epochs(op.join(fname_epochs, 'sub-' + subject +
+                                         '_task-rest_proc-clean_epo.fif'))
 
     else: 
         epochs_path = BIDSPath(subject= subject, 
@@ -71,7 +74,7 @@ for subject in subjects:
         emg_epochs = epochs.copy().pick_channels(['EXG7','EXG8'])
         y = emg_epochs.get_data().var(axis=2).mean(axis=1)
     else:
-        picks_eda = mne.pick_channels(ch_names = epochs.ch_names ,include=['EDA'])       
+        picks_eda = mne.pick_channels(ch_names = epochs.ch_names,include=['EDA'])       
         if int(subject) < 23:
             epochs.apply_function(fun=lambda x: x/1000, picks=picks_eda)
         else:
@@ -98,7 +101,7 @@ for subject in subjects:
     times = [i for i in range(len(epochs))]
     ax.plot(times, y, color='r', label=f'True {measure}')
     ax.plot(times, y_preds, color='b', label=f'Predicted {measure}')
-    ax.set_xlabel('Time (s)')
+    ax.set_xlabel('Time (epochs)')
     if measure == 'emg':
         ax.set_ylabel(f'Var(emg)')
     else:
@@ -107,13 +110,15 @@ for subject in subjects:
     plt.legend()
     if os.name == 'nt':
         np.save(op.join(derivative_path,  'sub-' + subject +
-                   f'_scores_{measure}_' + score_name + '_NO_OPT_PIPELINE_spoc_' + cv_name + f'{debug_out}.npy'),
+                   f'_scores_{measure}_' + score_name + '_NO_OPT_PIPELINE_spoc_' +
+                   cv_name + f'{debug_out}.npy'),
           scores)  
         plt.savefig(op.join(derivative_path,  'sub-' + subject +
-                            f'_plot_NO_OPT_PIPELINE_spoc_DEAP_{measure}_{cv_name}_{debug_out}.png'))
+                            f'_plot_NO_OPT_PIPELINE_spoc_DEAP_{measure}_{cv_name}{debug_out}.png'))
     else:
         np.save(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
-                   f'_scores_{measure}_' + score_name + '_NO_OPT_PIPELINE_spoc_' + cv_name + f'{debug_out}.npy'),
+                   f'_scores_{measure}_' + score_name + '_NO_OPT_PIPELINE_spoc_' +
+                   cv_name + f'{debug_out}.npy'),
           scores)
         plt.savefig(op.join(derivative_path, 'sub-' + subject , 'eeg','sub-' + subject +
-                              f'_plot_NO_OPT_PIPELINE_spoc_DEAP_{measure}_{cv_name}_{debug_out}.png'))
+                              f'_plot_NO_OPT_PIPELINE_spoc_DEAP_{measure}_{cv_name}{debug_out}.png'))
