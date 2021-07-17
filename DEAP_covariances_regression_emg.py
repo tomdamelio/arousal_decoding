@@ -127,7 +127,7 @@ for subject in subjects:
     if measure == 'emg':
         picks_emg = mne.pick_types(epochs.info, emg=True)
         epochs = epochs.filter(20., 30., picks=picks_emg)
-        # How are we going to model our target? -> Mean of two EMG Trapezius sensors
+        # How are we going to model our target? -> Mean of two EMG zygomaticus sensors
         emg_epochs = epochs.copy().pick_channels(['EXG5','EXG6'])
         
         y_stat = 'var'
