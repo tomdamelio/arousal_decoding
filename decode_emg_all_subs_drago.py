@@ -29,7 +29,7 @@ if measure == 'emg':
 else:
     import DEAP_BIDS_config_eda as cfg
 
-DEBUG = True
+DEBUG = False
 
 derivative_path = cfg.deriv_root
 n_jobs = 15
@@ -95,7 +95,7 @@ for subject in subjects:
     scores = cross_val_score(X=X, y=y, estimator=clf, cv=cv, scoring='r2')
 
     # Plot the True EDA power and the EDA predicted from EEG data
-    fig, ax = plt.subplots(1, 1, figsize=[10, 4])
+    fig, ax = plt.subplots(1, 1, figsize=[30, 12])
     #times = raw.times[epochs.events[:, 0] - raw.first_samp]
     times = [i for i in range(len(epochs))]
     ax.plot(times, y, color='r', label=f'True {measure}')
