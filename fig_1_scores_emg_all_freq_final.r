@@ -22,11 +22,11 @@ np <- import("numpy")
 subjects <- sprintf("%02d", 1:32) 
 
 measure <- 'emg'
-date <- '16-07'
+date <- '19-07'
 
 measure_uppercase <- toupper(measure)
 
-scores_dir <- str_glue('{measure}-scores--{date}-meegpowreg')
+scores_dir <- str_glue('{measure}_scores--{date}-meegpowreg')
 fname <- str_glue("./outputs/DEAP-bids/derivatives/mne-bids-pipeline-{measure}/")
 
 for (sub in subjects)
@@ -182,7 +182,7 @@ ggplot(data = subset(data_long, estimator != "dummy"),
   geom_beeswarm(
     priority = 'random',
     mapping = aes(color = est_type,
-                  alpha = 0.3),
+                  alpha = 0.1),
     size = 2.5,
     show.legend = T, cex = 0.15) +
   scale_size_continuous(range = c(0.5, 2)) +
@@ -199,7 +199,7 @@ ggplot(data = subset(data_long, estimator != "dummy"),
   labs(y = expression(R^2), x = NULL, parse = T) +
   guides(size = F, alpha = F) +
   theme(legend.position = c(0.8, 0.86)) +
-  coord_flip(ylim = c(-1, 1)) +
+  coord_flip(ylim = c(-3, 1)) +
   scale_fill_manual(values = my_color_cats, breaks = names(my_color_cats),
                     labels = est_labels,
                     name = NULL) +
