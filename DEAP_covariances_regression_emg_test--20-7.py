@@ -18,7 +18,7 @@ if measure == 'emg':
 else:
     import DEAP_BIDS_config_eda as cfg
 
-DEBUG = True
+DEBUG = False
 
 derivative_path = cfg.deriv_root
 
@@ -27,7 +27,7 @@ seed = 42
 n_splits = 10
 n_jobs = 15
 score_name, scoring = "r2", "r2"
-cv_name = '2Fold'
+cv_name = '10Fold'
 
 freqs = {'low': (0.1, 1.5),
          'delta': (1.5, 4.),
@@ -72,6 +72,10 @@ if DEBUG:
    debug_out = '_DEBUG'
 else:
    debug_out = ''
+
+
+subjects = subjects[9]
+subject = '10'
 
 def run_low_rank(n_components, X, y, estimators, cv, scoring):   
     out = dict(n_components=n_components)
@@ -165,7 +169,7 @@ for subject in subjects:
         out_frames.append(this_df)
     out_df = pd.concat(out_frames)
     
-    out_df.to_csv(op.join(derivative_path, f'{measure}_opt--19-07-meegpowreg', 'sub-' + subject +
+    out_df.to_csv(op.join(derivative_path, f'{measure}_opt--20-07-meegpowreg', 'sub-' + subject +
                             f'_DEAP_component_scores_{measure}{debug_out}.csv'))
  
     mean_df = out_df.groupby('n_components').mean().reset_index()
@@ -197,7 +201,7 @@ for subject in subjects:
           print(scores)
        all_scores[key] = scores
  
-    np.save(op.join(derivative_path, f'{measure}_scores--19-07-meegpowreg', 'sub-' + subject +
+    np.save(op.join(derivative_path, f'{measure}_scores--20-07-meegpowreg', 'sub-' + subject +
                 f'_all_scores_models_DEAP_{measure}_' + score_name + '_' + cv_name + f'{debug_out}.npy'),
         all_scores)
     
@@ -233,12 +237,12 @@ for subject in subjects:
         ax.set_ylabel(f'{measure} {y_stat}')
         ax.set_title(f'Sub {subject} - {model} model - {measure} prediction')
         plt.legend()
-        plt_path = op.join(derivative_path, f'{measure}_plot--19-07-meegpowreg', 'sub-' + subject +
+        plt_path = op.join(derivative_path, f'{measure}_plot--20-07-meegpowreg', 'sub-' + subject +
                             f'_DEAP_plot_prediction_{model}_{measure}{debug_out}.png')
         plt.savefig(plt_path)
         y_and_y_pred_opt_models[model] = y_preds
 
-    np.save(op.join(derivative_path, f'{measure}_scores--19-07-meegpowreg', 'sub-' + subject +
+    np.save(op.join(derivative_path, f'{measure}_scores--20-07-meegpowreg', 'sub-' + subject +
                 f'_y_and_y_pred_opt_models_{measure}_' + f'{debug_out}.npy'),
         y_and_y_pred_opt_models)
     
