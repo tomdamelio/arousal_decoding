@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import mne
 from mne_bids import BIDSPath
+from sklearn.linear_model import RidgeCV, GammaRegressor
 from sklearn.model_selection import (
      cross_val_score, ShuffleSplit, KFold, GroupShuffleSplit, cross_val_predict)
 from meegpowreg import make_filter_bank_regressor
@@ -18,7 +19,9 @@ if measure == 'emg':
 else:
     import DEAP_BIDS_config_eda as cfg
 
-DEBUG = False
+DEBUG = True
+
+date = '20-07'
 
 derivative_path = cfg.deriv_root
 
@@ -64,18 +67,15 @@ pipelines = {'riemann': make_filter_bank_regressor(
                 projection_params=None,
                 vectorization_params=None)}
 
+
 if DEBUG:
    n_jobs = 4
    # subs 8, 10, 12, 28
-   subjects = subjects[7,9,11,27]
-   subject = '08'
+   subjects = ['08']
    debug_out = '_DEBUG'
 else:
    debug_out = ''
-
-
-subjects = subjects[9]
-subject = '10'
+   subjects = ['08', '10', '12', '28']
 
 def run_low_rank(n_components, X, y, estimators, cv, scoring):   
     out = dict(n_components=n_components)
@@ -91,6 +91,7 @@ def run_low_rank(n_components, X, y, estimators, cv, scoring):
             print(scores)
         out[key] = scores
     return out
+
 
 for subject in subjects:
     if os.name == 'nt':
@@ -169,7 +170,7 @@ for subject in subjects:
         out_frames.append(this_df)
     out_df = pd.concat(out_frames)
     
-    out_df.to_csv(op.join(derivative_path, f'{measure}_opt--20-07-meegpowreg', 'sub-' + subject +
+    out_df.to_csv(op.join(derivative_path, f'{measure}_opt--{date}-meegpowreg', 'sub-' + subject +
                             f'_DEAP_component_scores_{measure}{debug_out}.csv'))
  
     mean_df = out_df.groupby('n_components').mean().reset_index()
@@ -201,7 +202,7 @@ for subject in subjects:
           print(scores)
        all_scores[key] = scores
  
-    np.save(op.join(derivative_path, f'{measure}_scores--20-07-meegpowreg', 'sub-' + subject +
+    np.save(op.join(derivative_path, f'{measure}_scores--{date}-meegpowreg', 'sub-' + subject +
                 f'_all_scores_models_DEAP_{measure}_' + score_name + '_' + cv_name + f'{debug_out}.npy'),
         all_scores)
     
@@ -214,14 +215,16 @@ for subject in subjects:
                                 method='spoc',
                                 projection_params=dict(scale='auto', reg=1.e-05,
                                 shrink=1, n_compo= best_components['spoc']),
-                                vectorization_params=None)   
+                                vectorization_params=None,
+                                estimator=GammaRegressor())   
         elif model == 'riemann':
             clf = make_filter_bank_regressor(
                                 names=freqs.keys(),
                                 method='riemann',
                                 projection_params=dict(scale=1, reg=1.e-05,
                                                        n_compo= best_components['riemann']),
-                                vectorization_params=dict(metric='riemann'))
+                                vectorization_params=dict(metric='riemann'),
+                                estimator=GammaRegressor())
 
         
         # Run cross validaton
@@ -237,19 +240,15 @@ for subject in subjects:
         ax.set_ylabel(f'{measure} {y_stat}')
         ax.set_title(f'Sub {subject} - {model} model - {measure} prediction')
         plt.legend()
-        plt_path = op.join(derivative_path, f'{measure}_plot--20-07-meegpowreg', 'sub-' + subject +
+        plt_path = op.join(derivative_path, f'{measure}_plot--{date}-meegpowreg', 'sub-' + subject +
                             f'_DEAP_plot_prediction_{model}_{measure}{debug_out}.png')
         plt.savefig(plt_path)
         y_and_y_pred_opt_models[model] = y_preds
 
-    np.save(op.join(derivative_path, f'{measure}_scores--20-07-meegpowreg', 'sub-' + subject +
+    np.save(op.join(derivative_path, f'{measure}_scores--{date}-meegpowreg', 'sub-' + subject +
                 f'_y_and_y_pred_opt_models_{measure}_' + f'{debug_out}.npy'),
         y_and_y_pred_opt_models)
-    
-    print(pipelines[f"riemann_{best_components['riemann']}"].steps[0][1].transform)
-    print(pipelines[f"spoc_{best_components['spoc']}"].steps[0][1].transform)
-    print(best_components)
-    
+        
     del pipelines[f"spoc_{best_components['spoc']}"]
     del pipelines[f"riemann_{best_components['riemann']}"]
     
