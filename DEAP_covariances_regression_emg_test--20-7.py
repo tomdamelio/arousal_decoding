@@ -45,27 +45,32 @@ pipelines = {'riemann': make_filter_bank_regressor(
                 names=freqs.keys(),
                 method='riemann',
                 projection_params=dict(scale=1, reg=1.e-05, n_compo=31),
-                vectorization_params=dict(metric='riemann')),
+                vectorization_params=dict(metric='riemann'),
+                estimator=GammaRegressor()),
              'spoc': make_filter_bank_regressor(
                 names=freqs.keys(),
                 method='spoc',
                 projection_params=dict(scale='auto', reg=1.e-05, shrink=1, n_compo=31),
-                vectorization_params=None),
+                vectorization_params=None,
+                estimator=GammaRegressor()),
              'log_diag': make_filter_bank_regressor(
                 names=freqs.keys(),
                 method='log_diag',
                 projection_params=None,
-                vectorization_params=None),
+                vectorization_params=None,
+                estimator=GammaRegressor()),
              'upper': make_filter_bank_regressor(
                 names=freqs.keys(),
                 method='naive',
                 projection_params=None,
-                vectorization_params=None),
+                vectorization_params=None,
+                estimator=GammaRegressor()),
              'random': make_filter_bank_regressor(
                 names=freqs.keys(),
                 method='random',
                 projection_params=None,
-                vectorization_params=None)}
+                vectorization_params=None,
+                estimator=GammaRegressor())}
 
 
 if DEBUG:
@@ -184,13 +189,15 @@ for subject in subjects:
                                         method='spoc',
                                         projection_params=dict(scale='auto', reg=1.e-05,
                                                                shrink=1, n_compo= best_components['spoc']),
-                                                               vectorization_params=None)
+                                                               vectorization_params=None,
+                                                               estimator=GammaRegressor())
 
     pipelines[f"riemann_{best_components['riemann']}"] = make_filter_bank_regressor(
                 names=freqs.keys(),
                 method='riemann',
                 projection_params=dict(scale=1, reg=1.e-05, n_compo= best_components['riemann']),
-                vectorization_params=dict(metric='riemann'))
+                vectorization_params=dict(metric='riemann'),
+                estimator=GammaRegressor())
 
     all_scores = dict() 
     for key, estimator in pipelines.items():
