@@ -75,11 +75,10 @@ pipelines = {'riemann': make_filter_bank_regressor(
 
 if DEBUG:
    n_jobs = 4
-   # subs 8, 10, 12, 28
-   subjects = ['01','02']
+   subjects = ['10']
+   subject = ['10']
    debug_out = '_DEBUG'
 else:
-   subjects = ['10']
    debug_out = ''
 
 def run_low_rank(n_components, X, y, estimators, cv, scoring):   
@@ -97,7 +96,7 @@ def run_low_rank(n_components, X, y, estimators, cv, scoring):
         out[key] = scores
     return out
 
-def hampel(vals_orig, k=3, t0=1):
+def hampel(vals_orig, k=9, t0=1):
     '''
     vals: pandas series of values from which to remove outliers
     k: size of window (including the sample; 7 is equal to 3 on either side of value)
@@ -133,8 +132,8 @@ for subject in subjects:
     
     covs = mne.externals.h5io.read_hdf5(fname_covs)
     
-#    if DEBUG:
-#       covs = covs[:30]
+    if DEBUG:
+       covs = covs[:30]
  
     X_cov = np.array([cc for cc in covs])    
     df_features = pd.DataFrame(
@@ -159,8 +158,8 @@ for subject in subjects:
       # read epochs
       epochs = mne.read_epochs(epochs_path)
       
-#    if DEBUG:
-#        epochs = epochs[:30]
+    if DEBUG:
+        epochs = epochs[:30]
     
     if measure == 'emg':
         # 1. Band pass filter EMG at 20 hz- 256 hz (it is not possible filter more than nfreq/2)
@@ -199,7 +198,6 @@ for subject in subjects:
     low_rank_estimators = {k: v for k, v in pipelines.items()
                          if k in ('spoc', 'riemann')}
     
-
     cv = KFold(n_splits=n_splits)
     
     out_list = Parallel(n_jobs=n_jobs)(delayed(run_low_rank)(
@@ -242,11 +240,11 @@ for subject in subjects:
 
     all_scores = dict() 
     for key, estimator in pipelines.items():
-       param_grid = {'gammaregressor__alpha': [0.001, 0.01, 1., 10., 100.]}
+       param_grid = {'gammaregressor__alpha': [0.01, 1., 10.]}
        search = GridSearchCV(pipelines['riemann'], param_grid)
        search.fit(df_features, y)
        print(search.best_params_['gammaregressor__alpha'])
-       estimator.steps[-1] = ('gammaregressor', GammaRegressor(alpha = search.best_params_['gammaregressor__alpha']))
+       estimator.steps[-1] = ('gammaregressor', GammaRegressor(alpha = search.best_params_['gammaregressor__alpha'], max_iter=1000))
        if 'spoc_' in key:
            spoc_opt_alpha = search.best_params_['gammaregressor__alpha']
        if 'riemann_' in key:
@@ -275,7 +273,7 @@ for subject in subjects:
                                 projection_params=dict(scale='auto', reg=1.e-05,
                                 shrink=1, n_compo= best_components['spoc']),
                                 vectorization_params=None,
-                                estimator=GammaRegressor(alpha = spoc_opt_alpha))   
+                                estimator=GammaRegressor(alpha = spoc_opt_alpha, max_iter=1000))   
             score_opt = np.asarray([v for k,v in all_scores.items() if 'riemann_'in k]).mean().round(3)
         elif model == 'riemann':
             clf = make_filter_bank_regressor(
@@ -284,7 +282,7 @@ for subject in subjects:
                                 projection_params=dict(scale=1, reg=1.e-05,
                                                        n_compo= best_components['riemann']),
                                 vectorization_params=dict(metric='riemann'),
-                                estimator=GammaRegressor(alpha = riemann_opt_alpha))
+                                estimator=GammaRegressor(alpha = riemann_opt_alpha, max_iter=1000))
             score_opt = np.asarray([v for k,v in all_scores.items() if 'spoc_'in k]).mean().round(3)
 
         # Run cross validaton
