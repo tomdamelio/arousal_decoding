@@ -19,7 +19,7 @@ if measure == 'emg':
 else:
     import DEAP_BIDS_config_eda as cfg
 
-DEBUG = False
+DEBUG = True
 
 date = '22-07'
 
@@ -131,10 +131,7 @@ for subject in subjects:
         fname_covs = op.join(derivative_path, 'sub-' + subject, 'eeg', 'sub-' + subject + f'_covariances_{measure}.h5')
     
     covs = mne.externals.h5io.read_hdf5(fname_covs)
-    
-    if DEBUG:
-       covs = covs[:30]
- 
+     
     X_cov = np.array([cc for cc in covs])    
     df_features = pd.DataFrame(
        {band: list(X_cov[:, ii]) for ii, band in
@@ -157,10 +154,7 @@ for subject in subjects:
                              check=False)
       # read epochs
       epochs = mne.read_epochs(epochs_path)
-      
-    if DEBUG:
-        epochs = epochs[:30]
-    
+          
     if measure == 'emg':
         # 1. Band pass filter EMG at 20 hz- 256 hz (it is not possible filter more than nfreq/2)
         picks_emg = mne.pick_types(epochs.info, emg=True)
@@ -186,4 +180,5 @@ for subject in subjects:
         plt_path = op.join(derivative_path, f'{measure}_plot--{date}-meegpowreg-ONLY_TRUE_MEASURE', 'sub-' + subject +
                             f'_DEAP_plot__{measure}_ONLY_TRUE MEASURE.png')
         plt.savefig(plt_path)
+        plt.clf()
     
