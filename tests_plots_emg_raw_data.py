@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import stats
 import mne
 from mne_bids import BIDSPath
 from sklearn.linear_model import RidgeCV, GammaRegressor
@@ -97,6 +98,7 @@ import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import stats
 import mne
 from mne_bids import BIDSPath
 from sklearn.linear_model import RidgeCV, GammaRegressor
@@ -126,7 +128,7 @@ fname_epochs = derivative_path / 'clean-epo-files'
 
 # Desarrollo pipeline para anlisis de datos de EMG
 # 1. Band pass filter EMG at 20 hz- 256 hz
-# (no se puede 512 hz. Maximo nfreq/2 segun codumentacion de MNE)
+# (no se puede 512 hz. Maximo nfreq/2 segun documentacion de MNE)
 
 epochs = mne.read_epochs(op.join(fname_epochs, 'sub-' + subject + '_task-rest_proc-clean_epo.fif'))
 picks_emg = mne.pick_types(epochs.info, emg=True)
@@ -134,34 +136,32 @@ epochs = epochs.filter(l_freq = 20., h_freq = None, picks=picks_emg)
 emg_epochs = epochs.copy().pick_channels(['EXG5','EXG6'])
 
 # 2. EMG activity = EMG z1 - EMG z2
+
 emg = emg_epochs.get_data()
 emgz1 = emg[:,0,:]
 emgz2 = emg[:,1,:]
-emg_delta = emgz1 - emgz2
-
 #%%
 # 3. Divide EMG activity in 100 ms bins (15 bins in 1.5 seconds)
 #    (para lograr esto, descarto ultimo 4 valores de cada epoca, asi es divisible por 15 [100 ms * 15]])
 
+emg_delta = emgz1 - emgz2
+
 emg_delta  = emg_delta[:,:-4]
-emg_delta = emg_delta.reshape(len(emg_epochs), 15, 51)
+emg_delta_reshaped = emg_delta.reshape(len(emg_epochs), 15, 51)
 
-#%%
 # 4. Calculate  root-mean-square (over EMG activity bins)
-for ii in range(emg_delta.shape[0]):
-    for jj in range(emg_delta.shape[1]):
-        rms = np.sqrt(np.mean(emg_delta[ii,jj,:]**2))
-        emg_delta[ii,jj] = rms   
 
-emg_delta_squared = np.square(emg_delta)
+# Eleva al cuadrado todos las restas ebtre emgz1 y emgz2 (emg delta)
+emg_delta_squared = np.square(emg_delta_reshaped)
+# Calcula el promedio de cada bin (15 promedios por epoca)
 emg_rms = np.sqrt(emg_delta_squared.mean(axis=2))
 
-#%%
 # 5. Calculate Z-score of every bin
-from scipy import stats
+
 emg_rms_zscore = stats.zscore(emg_rms, axis=1)
 
 # 6. Check if there are differences over 3.5 SD in a given bin
+
 emg_rms_zscore_diff = np.diff(emg_rms_zscore)
 emg_to_reject = np.logical_or(emg_rms_zscore_diff > 3.5, emg_rms_zscore_diff < - 3.5)
 emg_to_reject_indices = np.unique(np.where(emg_to_reject == True)[0])
@@ -173,7 +173,62 @@ for item in emg_all_indices:
     if item not in emg_to_reject_indices:
         indices_to_take.append(item)
 
-#%%
 # 7. filter emg data based on rejections
 emg_delta_filt = np.take(emg_delta, indices_to_take, 0)
-# %%
+
+#%%
+# SEGUIR DESDE ACA -> 
+# 1. Calculo de RMS para todas las epocas (1.5 secs)
+emg_delta = emgz1 - emgz2
+emg_delta_squared = np.square(emg_delta)
+emg_rms = np.sqrt(emg_delta_squared.mean(axis=1))
+emg_rms_series = pd.Series(emg_rms)
+
+# 2. Implementacion de Hempel filtering
+# SEGUIR DESDE ACA -> ESTOY DEBUGEANDO ESTA FUNCION. VOY POR DIFF.
+
+def hampel(vals_orig, k=2, t0=1):
+    '''
+    vals: pandas series of values from which to remove outliers
+    k: size of window (including the sample; 7 is equal to 3 on either side of value)
+    '''
+    
+    #Make copy so original not edited
+    vals = vals_orig.copy()
+    
+    #Hampel Filter
+    L = 3.
+    rolling_median = vals.rolling(window=k, center=True).median()
+    MAD = lambda x: np.median(np.abs(x - np.median(x)))
+    rolling_MAD = vals.rolling(window=k, center=True).apply(MAD)
+    threshold = t0 * L * rolling_MAD
+    difference = np.abs(vals - rolling_median)
+    
+    '''
+    Perhaps a condition should be added here in the case that the threshold value
+    is 0.0; maybe do not mark as outlier. MAD may be 0.0 without the original values
+    being equal. See differences between MAD vs SDV.
+    '''
+    
+    outlier_idx = difference > threshold
+    vals[outlier_idx] = rolling_median[outlier_idx] 
+    return(vals)
+
+emg_rms_filtered = hampel(emg_rms_series)
+
+
+#%%
+# Calculo los RMSE luego de descartar epocas (RMSE finales)
+emg = emg_epochs.get_data()
+emgz1 = emg[:,0,:]
+emgz2 = emg[:,1,:]
+emg_delta = emgz1 - emgz2
+
+emg_delta_squared = np.square(emg_delta)
+emg_rms = np.sqrt(emg_delta_squared.mean(axis=1))
+
+plt.plot(emg_rms[:3000]) 
+plt.xticks(emg_to_reject_indices)
+
+#%%
+emg_rms_filt = np.take(emg_rms, indices_to_take, 0)
