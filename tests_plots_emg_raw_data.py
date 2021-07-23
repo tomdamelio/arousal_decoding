@@ -187,7 +187,7 @@ emg_rms_series = pd.Series(emg_rms)
 # 2. Implementacion de Hempel filtering
 # SEGUIR DESDE ACA -> ESTOY DEBUGEANDO ESTA FUNCION. VOY POR DIFF.
 
-def hampel(vals_orig, k=2, t0=1):
+def hampel(vals_orig, k=3, t0=1):
     '''
     vals: pandas series of values from which to remove outliers
     k: size of window (including the sample; 7 is equal to 3 on either side of value)
