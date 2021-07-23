@@ -19,7 +19,7 @@ if measure == 'emg':
 else:
     import DEAP_BIDS_config_eda as cfg
 
-DEBUG = True
+DEBUG = False
 
 date = '20-07'
 
@@ -80,7 +80,7 @@ if DEBUG:
    debug_out = '_DEBUG'
 else:
    debug_out = ''
-   subjects = ['08', '10', '12', '28']
+   
 
 def run_low_rank(n_components, X, y, estimators, cv, scoring):   
     out = dict(n_components=n_components)
