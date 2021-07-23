@@ -19,7 +19,7 @@ if measure == 'emg':
 else:
     import DEAP_BIDS_config_eda as cfg
 
-DEBUG = False
+DEBUG = True
 
 date = '22-07'
 
@@ -79,6 +79,7 @@ if DEBUG:
    subjects = ['01','02']
    debug_out = '_DEBUG'
 else:
+   subjects = ['10']
    debug_out = ''
 
 def run_low_rank(n_components, X, y, estimators, cv, scoring):   
@@ -132,8 +133,8 @@ for subject in subjects:
     
     covs = mne.externals.h5io.read_hdf5(fname_covs)
     
-    if DEBUG:
-       covs = covs[:30]
+#    if DEBUG:
+#       covs = covs[:30]
  
     X_cov = np.array([cc for cc in covs])    
     df_features = pd.DataFrame(
@@ -158,8 +159,8 @@ for subject in subjects:
       # read epochs
       epochs = mne.read_epochs(epochs_path)
       
-    if DEBUG:
-        epochs = epochs[:30]
+#    if DEBUG:
+#        epochs = epochs[:30]
     
     if measure == 'emg':
         # 1. Band pass filter EMG at 20 hz- 256 hz (it is not possible filter more than nfreq/2)
