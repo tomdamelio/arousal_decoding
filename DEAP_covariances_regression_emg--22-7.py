@@ -96,7 +96,7 @@ def run_low_rank(n_components, X, y, estimators, cv, scoring):
         out[key] = scores
     return out
 
-def hampel(vals_orig, k=9, t0=1):
+def hampel(vals_orig, k=3, t0=1):
     '''
     vals: pandas series of values from which to remove outliers
     k: size of window (including the sample; 7 is equal to 3 on either side of value)
