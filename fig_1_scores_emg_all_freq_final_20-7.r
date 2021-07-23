@@ -19,7 +19,7 @@ np <- import("numpy")
 # Create a for loop here to open dataframes, add a 'subject' column,
 # concatenate this dfs and calculate mean of every column depending on subject
 
-subjects <- sprintf("%02d", 1:32) 
+subjects <- sprintf("%02d", 1:10)#32) 
 
 measure <- 'emg'
 date <- '20-07'
@@ -147,7 +147,7 @@ est_labels <- setNames(
 
 # categorical colors based on: https://jfly.uni-koeln.de/color/
 # beef up long data
-data_long$est_type <- factor(rep(est_types, each = 32))
+data_long$est_type <- factor(rep(est_types, each = 19))#32))
 
 #data_long <- data_long %>% 
 #                  group_by(estimator) %>% 
@@ -164,10 +164,10 @@ data_long$est_type <- factor(rep(est_types, each = 32))
 # CALCULATE MEAN OVER FOLD
 
 
-data_long$sub <- rep(1:32, times = length(est_types))
+data_long$sub <- rep(1:19, times = length(est_types))
 
 # prepare properly sorted x labels
-sort_idx <- order(apply(data_, 2, mean))
+sort_idx <- order(apply(data_, 10, mean))#2, mean))
 # IS GOING TO BE USEFUL WHEN PLOTING
 levels_est <- est_names[rev(sort_idx)]
 
