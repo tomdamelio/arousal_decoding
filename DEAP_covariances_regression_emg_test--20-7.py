@@ -1,3 +1,5 @@
+#%%
+
 import os.path as op
 import os
 import pandas as pd
@@ -76,7 +78,8 @@ pipelines = {'riemann': make_filter_bank_regressor(
 if DEBUG:
    n_jobs = 4
    # subs 8, 10, 12, 28
-   subjects = ['08']
+   subjects = ['10']
+   subject = '10'
    debug_out = '_DEBUG'
 else:
    debug_out = ''
@@ -98,6 +101,7 @@ def run_low_rank(n_components, X, y, estimators, cv, scoring):
     return out
 
 
+#%%
 for subject in subjects:
     if os.name == 'nt':
         fname_covs = op.join(derivative_path, f'{measure}-cov-matrices-all-freqs', 'sub-' + subject + f'_covariances_{measure}.h5')
@@ -106,8 +110,8 @@ for subject in subjects:
     
     covs = mne.externals.h5io.read_hdf5(fname_covs)
     
-    if DEBUG:
-       covs = covs[:30]
+#    if DEBUG:
+#       covs = covs[:30]
  
     X_cov = np.array([cc for cc in covs])    
     df_features = pd.DataFrame(
@@ -132,8 +136,8 @@ for subject in subjects:
       # read epochs
       epochs = mne.read_epochs(epochs_path)
       
-    if DEBUG:
-        epochs = epochs[:30]
+#    if DEBUG:
+#        epochs = epochs[:30]
     
     if measure == 'emg':
         picks_emg = mne.pick_types(epochs.info, emg=True)
@@ -261,5 +265,3 @@ for subject in subjects:
     
     
         
-        
-
