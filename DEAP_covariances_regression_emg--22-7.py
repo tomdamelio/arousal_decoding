@@ -75,8 +75,8 @@ pipelines = {'riemann': make_filter_bank_regressor(
 
 if DEBUG:
    n_jobs = 4
-   subjects = ['10']
-   subject = ['10']
+   subjects = ['30']
+   subject = ['30']
    debug_out = '_DEBUG'
 else:
    debug_out = ''
@@ -96,7 +96,7 @@ def run_low_rank(n_components, X, y, estimators, cv, scoring):
         out[key] = scores
     return out
 
-def hampel(vals_orig, k=3, t0=1):
+def hampel(vals_orig, k=60, t0=1):
     '''
     vals: pandas series of values from which to remove outliers
     k: size of window (including the sample; 7 is equal to 3 on either side of value)
