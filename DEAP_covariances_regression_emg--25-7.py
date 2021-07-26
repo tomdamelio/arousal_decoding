@@ -19,9 +19,9 @@ if measure == 'emg':
 else:
     import DEAP_BIDS_config_eda as cfg
 
-DEBUG = True
+DEBUG = False
 
-date = '22-07_corrected'
+date = '25-07'
 
 derivative_path = cfg.deriv_root
 
