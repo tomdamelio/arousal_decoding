@@ -21,7 +21,7 @@ else:
 
 DEBUG = True
 
-date = '22-07_corrected'
+date = '25-07'
 
 derivative_path = cfg.deriv_root
 
@@ -96,33 +96,6 @@ def run_low_rank(n_components, X, y, estimators, cv, scoring):
         out[key] = scores
     return out
 
-def hampel(vals_orig, k=18, t0=1):
-    '''
-    vals: pandas series of values from which to remove outliers
-    k: size of window (including the sample; 7 is equal to 3 on either side of value)
-    '''
-    
-    #Make copy so original not edited
-    vals = vals_orig.copy()
-    
-    #Hampel Filter
-    L = 3.
-    rolling_median = vals.rolling(window=k, center=True).median()
-    MAD = lambda x: np.median(np.abs(x - np.median(x)))
-    rolling_MAD = vals.rolling(window=k, center=True).apply(MAD)
-    threshold = t0 * L * rolling_MAD
-    difference = np.abs(vals - rolling_median)
-    
-    '''
-    Perhaps a condition should be added here in the case that the threshold value
-    is 0.0; maybe do not mark as outlier. MAD may be 0.0 without the original values
-    being equal. See differences between MAD vs SDV.
-    '''
-    
-    outlier_idx = difference > threshold
-    vals[outlier_idx] = rolling_median[outlier_idx] 
-    return(vals)
-
 
 for subject in subjects:
     if os.name == 'nt':
@@ -174,10 +147,7 @@ for subject in subjects:
         
         y_stat = 'var'
         emg_delta = emgz1 - emgz2
-        emg_delta_var = emg_delta.var(axis=1)
-        emg_delta_var_series = pd.Series(emg_delta_var)
-        y = hampel(emg_delta_var_series)   
-        
+        y = emg_delta.var(axis=1)        
         
     else: 
         picks_eda = mne.pick_channels(ch_names = epochs.ch_names ,include=['EDA'])       
@@ -224,16 +194,15 @@ for subject in subjects:
                                         method='spoc',
                                         projection_params=dict(scale='auto', reg=1.e-05,
                                                                shrink=1, n_compo= best_components['spoc']),
-                                        vectorization_params=None,
-                                        estimator=GammaRegressor())
+                                                               vectorization_params=None,
+                                                               estimator=GammaRegressor())
 
     pipelines[f"riemann_{best_components['riemann']}"] = make_filter_bank_regressor(
-                                        names=freqs.keys(),
-                                        method='riemann',
-                                        projection_params=dict(scale=1, reg=1.e-05,
-                                                               n_compo= best_components['riemann']),
-                                        vectorization_params=dict(metric='riemann'),
-                                        estimator=GammaRegressor())
+                names=freqs.keys(),
+                method='riemann',
+                projection_params=dict(scale=1, reg=1.e-05, n_compo= best_components['riemann']),
+                vectorization_params=dict(metric='riemann'),
+                estimator=GammaRegressor())
 
     all_scores = dict() 
     for key, estimator in pipelines.items():
@@ -271,7 +240,7 @@ for subject in subjects:
                                 shrink=1, n_compo= best_components['spoc']),
                                 vectorization_params=None,
                                 estimator=GammaRegressor(alpha = spoc_opt_alpha, max_iter=1000))   
-            score_opt = np.asarray([v for k,v in all_scores.items() if 'spoc_'in k]).mean().round(3)
+            score_opt = np.asarray([v for k,v in all_scores.items() if 'riemann_'in k]).mean().round(3)
         elif model == 'riemann':
             clf = make_filter_bank_regressor(
                                 names=freqs.keys(),
@@ -280,14 +249,14 @@ for subject in subjects:
                                                        n_compo= best_components['riemann']),
                                 vectorization_params=dict(metric='riemann'),
                                 estimator=GammaRegressor(alpha = riemann_opt_alpha, max_iter=1000))
-            score_opt = np.asarray([v for k,v in all_scores.items() if 'riemann_'in k]).mean().round(3)
+            score_opt = np.asarray([v for k,v in all_scores.items() if 'spoc_'in k]).mean().round(3)
 
         # Run cross validaton
         y_preds = cross_val_predict(clf, df_features, y, cv=cv)
-        y_and_y_pred_opt_models[model] = y_preds
         
         # Plot the True EDA power and the EDA predicted from EEG data
         fig, ax = plt.subplots(1, 1, figsize=[20, 8])
+        #times = raw.times[epochs.events[:, 0] - raw.first_samp]
         times = [i for i in range(len(epochs))]
         ax.plot(times, y, color='r', alpha = 0.5, label=f'True {measure}')
         ax.plot(times, y_preds, color='b', alpha = 0.5, label=f'Predicted {measure}')
@@ -298,7 +267,7 @@ for subject in subjects:
         plt_path = op.join(derivative_path, f'{measure}_plot--{date}-meegpowreg', 'sub-' + subject +
                             f'_DEAP_plot_prediction_{model}_{measure}{debug_out}.png')
         plt.savefig(plt_path)
-        
+        y_and_y_pred_opt_models[model] = y_preds
 
     np.save(op.join(derivative_path, f'{measure}_scores--{date}-meegpowreg', 'sub-' + subject +
                 f'_y_and_y_pred_opt_models_{measure}_' + f'{debug_out}.npy'),
