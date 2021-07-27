@@ -81,6 +81,7 @@ if DEBUG:
    subject = ['01']
    debug_out = '_DEBUG'
 else:
+   subjects = subjets[15:]
    debug_out = ''
 
 def run_low_rank(n_components, X, y, estimators, cv, scoring):   
