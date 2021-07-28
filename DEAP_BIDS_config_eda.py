@@ -36,6 +36,8 @@ else:
         "/storage/store2/derivatives/DEAP-bids")
     deriv_root = pathlib.Path(
         "/storage/store2/work/tdamelio/tomas_damelio/outputs/DEAP-bids/derivatives/mne-bids-pipeline-eda")
+    deriv_root_store3 = pathlib.Path(
+        "/storage/store3/work/tdamelio/tomas_damelio/outputs/DEAP-bids/derivatives/mne-bids-pipeline-eda")
     annotations_root = pathlib.Path("/storage/store2/work/tdamelio/tomas_damelio/outputs/data/annotations_bad_no_stim")
     N_JOBS = 15
 
