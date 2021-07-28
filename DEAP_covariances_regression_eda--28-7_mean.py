@@ -21,7 +21,7 @@ else:
 
 DEBUG = False
 
-date = '27-07'
+date = '28-07-mean'
 
 derivative_path = cfg.deriv_root
 if os.name != 'nt':    
@@ -34,7 +34,7 @@ seed = 42
 n_splits = 2
 n_jobs = 15
 score_name, scoring = "r2", "r2"
-cv_name = '10Fold'
+cv_name = '2Fold'
 
 freqs = {'low': (0.1, 1.5),
          'delta': (1.5, 4.),
@@ -194,8 +194,8 @@ for subject in subjects:
             
         epochs = epochs.filter(l_freq = None, h_freq = 5., picks=picks_eda)
         
-        y_stat = 'var'
-        y = epochs.get_data().var(axis=2)[:, 0]    
+        y_stat = 'mean'
+        y = epochs.get_data().mean(axis=2)[:, 0]    
   
     low_rank_estimators = {k: v for k, v in pipelines.items()
                          if k in ('spoc', 'riemann')}
