@@ -15,8 +15,12 @@ from subject_number import subject_number as subjects
 from joblib import Parallel, delayed
 
 ###  SET CONFIGS ###
+
+# eda or emg?    
 measure = 'eda'
+# var or mean?   
 y_stat = 'var'
+
 DEBUG = True
 ####################
 
