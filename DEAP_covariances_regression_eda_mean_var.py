@@ -36,7 +36,8 @@ if os.name == 'nt':
 else:
     derivative_path = cfg.deriv_root
     derivative_path_3 = cfg.deriv_root_store3
-    
+
+date = datetime.datetime.now().strftime("%d-%m--%H-%M")    
 n_components = np.arange(1, 32, 1)
 seed = 42
 n_splits = 2
@@ -226,7 +227,6 @@ for subject in subjects:
         out_frames.append(this_df)
     out_df = pd.concat(out_frames)
     
-    date = datetime.datetime.now().strftime("%d-%m--%H-%M")
     opt_dir = op.join(derivative_path_3, measure + '_opt--' + date + '-' + y_stat)
     if not os.path.exists(opt_dir):
         os.makedirs(opt_dir)
