@@ -31,9 +31,11 @@ else:
     import DEAP_BIDS_config_eda as cfg
 
 if os.name == 'nt':
-    derivative_path = cfg.deriv_root    
+    derivative_path = cfg.deriv_root
+    derivative_path_3 = cfg.deriv_root  
 else:
-    derivative_path = cfg.deriv_root_store3
+    derivative_path = cfg.deriv_root
+    derivative_path_3 = cfg.deriv_root_store3
     
 n_components = np.arange(1, 32, 1)
 seed = 42
@@ -225,11 +227,11 @@ for subject in subjects:
     out_df = pd.concat(out_frames)
     
     date = datetime.datetime.now().strftime("%d-%m--%H-%M")
-    opt_dir = op.join(derivative_path, measure + '_opt--' + date + '-' + y_stat)
+    opt_dir = op.join(derivative_path_3, measure + '_opt--' + date + '-' + y_stat)
     if not os.path.exists(opt_dir):
         os.makedirs(opt_dir)
     
-    out_df.to_csv(op.join(derivative_path, measure + '_opt--' + date + '-' + y_stat,
+    out_df.to_csv(op.join(derivative_path_3, measure + '_opt--' + date + '-' + y_stat,
                           'sub-' + subject + '_DEAP_component_scores_' + measure + '_' +
                           y_stat + '_' + debug_out + '.csv'))
  
@@ -279,7 +281,7 @@ for subject in subjects:
           print(scores)
        all_scores[key] = scores
     
-    scores_dir = op.join(derivative_path, measure + '_scores--' + date + '-' + y_stat)
+    scores_dir = op.join(derivative_path_3, measure + '_scores--' + date + '-' + y_stat)
     if not os.path.exists(scores_dir):
         os.makedirs(scores_dir)
         
@@ -332,11 +334,11 @@ for subject in subjects:
         ax.set_title(f'Sub {subject} - {model} model - {measure} prediction\nR2 = {score_opt}')
         plt.legend()
         
-        plot_dir = op.join(derivative_path, measure + '_plot--' + date + '-' + y_stat)
+        plot_dir = op.join(derivative_path_3, measure + '_plot--' + date + '-' + y_stat)
         if not os.path.exists(plot_dir):
             os.makedirs(plot_dir)
             
-        plt_path = op.join(derivative_path, measure + '_plot--' + date + '-' + y_stat,
+        plt_path = op.join(derivative_path_3, measure + '_plot--' + date + '-' + y_stat,
                            'sub-' + subject + '_DEAP_plot_prediction_' + model + '_' +
                            measure + '_' + y_stat + '_' + debug_out + '.png')
         plt.savefig(plt_path)
