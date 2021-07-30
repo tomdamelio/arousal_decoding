@@ -8,8 +8,8 @@ library(ggplot2)
 
 #### Set parameters ####
 measure <- 'eda'
-y_stat <- 'mean'
-date_and_time <- '30-07--05-48' #extract from plots' directory
+y_stat <- 'var'
+date_and_time <- '30-07--05-36' #extract from plots' directory
 ########################
 
 if (.Platform$OS.type == "windows"){
