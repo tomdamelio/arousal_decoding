@@ -116,6 +116,6 @@ for subject in subjects:
         ratings.loc[(ratings.Trial == key) & (ratings.Participant_id == int(subject)), 'y'] = np.mean(y[value])
         ratings.loc[(ratings.Trial == key) & (ratings.Participant_id == int(subject)), 'y_pred'] = np.mean(y_pred[value])
 
-ratings.to_csv(op.join(eda_root, 'sub-' + subject + 'ratings_and_y.csv'))
+ratings.to_csv(op.join(eda_root,  'ratings_and_y.csv'))
 
     
