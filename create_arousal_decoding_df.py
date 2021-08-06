@@ -1,9 +1,3 @@
-'''
-El objetivo de este script es extraer un array de dos dimensiones de
-epochs x stimuli -> len = (epochs_per_trial, 40)
-
-'''
-
 import os
 import os.path as op
 import pandas as pd
@@ -23,6 +17,10 @@ y_stat = 'var'
 DEBUG = False
 ####################
 
+if DEBUG == True:
+    subjects = ['01']
+    subject = '01'
+
 if os.name == 'nt':
     data_root = pathlib.Path(
         '~/OneDrive/Escritorio/tomas_damelio/data').expanduser()
@@ -35,8 +33,9 @@ fname_ratings = op.join(data_root, 'participant_ratings.csv')
 ratings = pd.read_csv(fname_ratings)
 
 # S28  has 37 stimuli -> not possible to map
-ratings.drop(ratings[ratings.Participant_id == 28].index, inplace=True)
-subjects.remove('28')
+if DEBUG == False:
+    ratings.drop(ratings[ratings.Participant_id == 28].index, inplace=True)
+    subjects.remove('28')
 
 if measure == 'emg':
     import DEAP_BIDS_config_emg as cfg
@@ -54,6 +53,7 @@ else:
     
 ratings['y'] = np.nan
 ratings['y_pred'] = np.nan
+ratings['y_pred_delta'] = np.nan
 
 for subject in subjects:
     if os.name == 'nt':
@@ -105,6 +105,7 @@ for subject in subjects:
     # create variables y and y_pred (Riemann)
     y = eda_scores.item()['y']
     y_pred = eda_scores.item()['riemann']
+    y_pred_delta = y-y_pred
 
     # create dict (1,40) with number of epochs that correspond to each stimuli
     epochs_dict = dict()
@@ -115,7 +116,10 @@ for subject in subjects:
     for key, value in epochs_dict.items():
         ratings.loc[(ratings.Trial == key) & (ratings.Participant_id == int(subject)), 'y'] = np.mean(y[value])
         ratings.loc[(ratings.Trial == key) & (ratings.Participant_id == int(subject)), 'y_pred'] = np.mean(y_pred[value])
+        ratings.loc[(ratings.Trial == key) & (ratings.Participant_id == int(subject)), 'y_pred_delta'] = np.mean(y_pred_delta[value])
 
-ratings.to_csv(op.join(eda_root, 'ratings_and_y.csv'))
+if DEBUG == False:
+    ratings.to_csv(op.join(eda_root, f'ratings_{measure}_{y_stat}.csv'))
+
 
     
