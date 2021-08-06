@@ -1,12 +1,12 @@
-library(magrittr)
-library(reticulate)
-library(ggbeeswarm)
-library(dplyr)
+#library(magrittr)
+#library(reticulate)
+#library(ggbeeswarm)
+#library(dplyr)
 library(stringr)
-library(ggplot2)
-install.packages("lme4")
+#library(ggplot2)
+#install.packages("lme4")
 library(lme4)
-library(Rcpp)
+#library(Rcpp)
 
 #### Set parameters ####
 measure <- 'eda'
