@@ -4,8 +4,8 @@ The aim of the repository is to detail which analyses were conducted and to prov
 
 ## Objectives
 
-A. Disentangle the relationship between the EDA response and EEG predictors.
-B. Evaluate the performance of our self-reported arousal decoding models.
+-  Disentangle the relationship between the EDA response and EEG predictors.
+-  Evaluate the performance of our self-reported arousal decoding models.
 
 ## Key points
 A regression pipeline to predict electrodermal (and electromiographic) activity at the event-level with the data obtained from EEG recordings has been implemented.
