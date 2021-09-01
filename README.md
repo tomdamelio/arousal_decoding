@@ -1,4 +1,4 @@
-The aim of the repository is to detail which analyses were conducted and to provide the codes used in the Master thesis in Cognitive Sciences (ENS/PSL, Université de Paris, EHESS) of Tomás Ariel D'Amelio, supervised by Denis-Alexander Engemann:
+The aim of the repository is to detail which analyses were conducted and to provide the code used in the Master thesis in Cognitive Sciences (ENS/PSL, Université de Paris, EHESS) of Tomás Ariel D'Amelio, supervised by Denis-Alexander Engemann:
 
 # Predicting modelling of arousal: an analysis of a public EEG and EDA database
 
