@@ -9,9 +9,9 @@ The aim of the repository is to detail which analyses were conducted and to prov
 
 ## Key points
 - A regression pipeline to predict electrodermal (and electromiographic) activity at the event-level with the data obtained from EEG recordings has been implemented.
-Considering linear models were used, it has been possible to observe patterns of activity at the sensor level in terms of the main components of the predictions.
+- Considering linear models were used, it has been possible to observe patterns of activity at the sensor level in terms of the main components of the predictions.
 - We introduce a novel methodology for understanding the dynamics between central and peripheral nervous system signals, and their corresponding behavioural measures.
-- This approach may be of particular interest to anyone who wants to work with the data provided by the DEAP database in Python, especially in continuous predictive modelling tasks.
+This approach may be of particular interest to anyone who wants to work with the data provided by the DEAP database in Python, especially in continuous predictive modelling tasks.
 ## Our approach
 First, EDA decoding from EEG would be performed, with the idea of boosting high-resolution signals in each subject. Thus, we would train models with continuous inputs (i.e. EDA) and outputs (i.e. EEG) in order to extract as much information as possible from each subject to learn different subject-level function approximations. As an output of this first step, we would represent arousal with a predicted EDA version. This predicted signal would indirectly portray the coupling of autonomic and cerebral arousal, as it is the result of the sum of the EEG features weighted by the different coefficients generated after the fitting process with the EDA output data. This would allow making use of the richness of these signals in a unique representation at the subject level. In this way, the predicted arousal would contain information that is not included in the original EDA data. Consequently, in a second step, we would predict self-reported arousal from the predicted EDA, constituting the second part of the proposed statistical learning approach.
 ## Details of the steps carried out during the organisation, processing and statistical analysis of the data:
